@@ -1,78 +1,81 @@
-# Training Program Tracker — Okie Dokie Solutions
+## Goal
 
-Internal HR + Management dashboard to track trainees as they move through Levels 0–3. No auth — a role toggle switches between HR (full edit) and Management (read-only) views. Data persists in `localStorage`.
+Add a full Level-0 video training system to the Okie Dokie tracker. Sync 35 lessons live from your Google Sheet, let HR assign and track per-trainee progress, surface analytics/reports/certificates in a new sidebar, and block Level 0 → Level 1 promotion until every video is completed.
 
-## Pages & routes
+## New navigation
 
-- `/` — Dashboard (role toggle, summary, content area)
-- `/levels` — Static reference page describing each level's pay & expectations (also shown as a collapsible info panel on the dashboard)
+Convert the current top header into a collapsible left sidebar (keeps the existing HR/Management toggle in the header strip). Sidebar items:
 
-## Data model (localStorage key: `odk-trainees`)
+- Dashboard (existing trainees board/table)
+- Training Modules — browse all 11 modules / 35 lessons from the sheet
+- Progress Tracker — per-trainee checklist of videos + assignment links
+- Analytics — completion rates per module, per trainee, per manager
+- Reports — exportable CSV of progress
+- Certificates — auto-generated "Level 0 Complete" certificate (printable) when a trainee finishes 100%
+- Level Reference (existing)
 
-```ts
-type Level = 0 | 1 | 2 | 3;
-type Status = "Active" | "On Hold" | "Exited";
+## Module data — live from Google Sheet
 
-type Trainee = {
-  id: string;
-  name: string;
-  phone: string;
-  joinDate: string;          // ISO, date entered Level 0
-  currentLevel: Level;
-  levelSinceDate: string;    // ISO, date promoted to currentLevel
-  manager: string;
-  status: Status;
-  notes?: string;
-  history: { level: Level; date: string }[];
-};
+Fetch `https://docs.google.com/spreadsheets/d/1gWH0Gi6aG0MdMcNA-ieJX4vlOJD6s1HfKSEFo6I92ig/export?format=csv` on app load, parse, cache in localStorage with a 15‑minute TTL, and expose a "Sync now" button. Parsed shape per lesson:
+
+```text
+{ id, moduleNo, moduleName, lessonName, videoUrl, assignmentUrl?, level: 0 }
 ```
 
-Role toggle stored in `localStorage` key `odk-role` ("hr" | "management").
+The sheet's merged "Module" cells are handled by carrying forward the last non-empty module name. Drive `…/file/d/<ID>/view` links are auto-converted to `…/preview` for inline embedding.
 
-## HR View
+11 modules detected: Basics, SIS, Academic, Examination, Fee, PDF Template, Attendance, Library, Institute Diary, Zoho Forms, Communication.
 
-- **Add Trainee** dialog: name, phone, join date (defaults today), manager. New trainees start at Level 0; `levelSinceDate = joinDate`; status Active.
-- **Trainee table/list** with per-row actions:
-  - Promote → next level (disabled at Level 3); updates `currentLevel`, sets `levelSinceDate = today`, appends history entry
-  - Edit (all fields incl. status: Active / On Hold / Exited)
-  - Delete (confirm dialog)
-- Inline status badges and quick status change.
+## Progress tracking
 
-## Management View (read-only)
+Per-trainee progress stored in localStorage under `odk-progress`:
 
-- **Summary cards**: total trainees, count per level (L0–L3), promoted this month.
-- **Kanban board**: 4 columns (Level 0 / 1 / 2 / 3), trainee cards show name, days at current level, manager, status badge.
-- **Filter** by manager (dropdown built from unique managers) + status filter.
-- **Overdue review badge** (amber) on cards where days at current level > 30 and status = Active.
-- No edit controls visible.
+```text
+{ [traineeId]: { [lessonId]: { watched: bool, assignmentDone: bool, completedAt } } }
+```
 
-## Level reference panel
+A lesson counts as "complete" when watched is true AND (no assignment OR assignment marked done). Promotion rule wired into `promote()` in `src/lib/trainees.ts`: if current level is 0 and completion < 100%, throw + toast "Complete all 35 modules first".
 
-Collapsible card on the dashboard:
-- L0 — Pre-onboarding, video training, ₹0/mo
-- L1 — ₹8,000/mo, client calls & supporting visits
-- L2 — ₹10,000/mo, solo client visits, owns small clients
-- L3 — ₹12,000/mo, complex clients
+## Pages
+
+**Training Modules** — accordion of 11 modules → list of lessons. Click a lesson opens a dialog with embedded Drive video iframe + "Mark watched", and assignment download link + "Mark assignment done" when present. Management view = read-only.
+
+**Progress Tracker** — trainee picker (or all). For each trainee shows progress bar, module-level breakdown, list of pending lessons. HR can tick items on behalf of a trainee.
+
+**Analytics** — three Recharts cards: avg completion by module (bar), trainees by completion bucket 0/25/50/75/100% (bar), top managers by team completion (bar). Uses the existing chart tokens.
+
+**Reports** — table of every trainee × overall % + per-module %, "Download CSV" button.
+
+**Certificates** — auto-list of trainees at 100% Level-0 completion; printable certificate page styled with corporate header, trainee name, completion date, signature line.
 
 ## Design
 
-- Corporate, clean. Header with "Okie Dokie Solutions" wordmark + role toggle (segmented control).
-- Level color tokens added to `src/styles.css` (semantic, oklch):
-  - `--level-0` gray, `--level-1` green, `--level-2` blue, `--level-3` purple (+ matching foreground tokens)
-- shadcn components: card, button, dialog, input, select, badge, table, tabs, tooltip, sonner (toasts).
-- Responsive: kanban becomes horizontally scrollable on mobile; HR table becomes stacked cards.
+Keeps current color tokens, level colors, card style, Inter typography. Sidebar uses the shadcn `Sidebar` component in `collapsible="icon"` mode so the page still works on the 698px viewport.
 
-## Technical notes
+## Files
 
-- TanStack Start file routes: `src/routes/index.tsx` (dashboard), `src/routes/levels.tsx`.
-- All state via a single `useTrainees()` hook wrapping localStorage (with SSR-safe guard — read in `useEffect`, not at module scope).
-- Role state via `useRole()` hook, same SSR pattern.
-- Helpers: `daysBetween`, `promotedThisMonth`, `nextLevel`.
-- Components: `RoleToggle`, `SummaryCards`, `KanbanBoard`, `TraineeCard`, `HRTable`, `AddTraineeDialog`, `EditTraineeDialog`, `LevelLegend`, `ManagerFilter`.
-- Per TanStack Start rules: replace placeholder index, add proper `head()` metadata to both routes, set `notFoundComponent`/`errorComponent` where loaders are used (none here, but keep root 404 intact).
-- No backend, no Lovable Cloud — pure frontend with localStorage as requested.
+New:
+- `src/components/AppSidebar.tsx`
+- `src/lib/modules.ts` (CSV fetch + parse + cache)
+- `src/lib/progress.ts` (progress hook + completion math + promotion guard helper)
+- `src/components/LessonDialog.tsx`
+- `src/components/TraineePicker.tsx`
+- `src/components/CertificateCard.tsx`
+- `src/routes/modules.tsx`
+- `src/routes/progress.tsx`
+- `src/routes/analytics.tsx`
+- `src/routes/reports.tsx`
+- `src/routes/certificates.tsx`
+
+Edited:
+- `src/routes/__root.tsx` — wrap in `SidebarProvider` + `AppSidebar`
+- `src/lib/trainees.ts` — promotion gate from Level 0
+- `src/components/AppHeader.tsx` — slim header keeping role toggle + `SidebarTrigger`
 
 ## Out of scope
 
-- Authentication / real role enforcement (toggle is cosmetic per spec)
-- Multi-device sync, exports, audit log beyond per-trainee promotion history
+- No backend / auth (still localStorage, single browser)
+- No video upload — links are read from the sheet as-is
+- Sheet must remain "Anyone with the link → Viewer" for CSV export to work; if it goes private the sync stops and the app falls back to the last cached copy
+
+Approve and I'll build it.
