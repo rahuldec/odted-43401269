@@ -73,6 +73,7 @@ export function HRTable({
               <TableHead>Manager</TableHead>
               <TableHead>Level</TableHead>
               <TableHead>Days at level</TableHead>
+              <TableHead>Training</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
