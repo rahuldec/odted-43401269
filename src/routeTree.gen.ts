@@ -9,12 +9,43 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ReportsRouteImport } from './routes/reports'
+import { Route as ProgressRouteImport } from './routes/progress'
+import { Route as ModulesRouteImport } from './routes/modules'
 import { Route as LevelsRouteImport } from './routes/levels'
+import { Route as CertificatesRouteImport } from './routes/certificates'
+import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiModulesSyncRouteImport } from './routes/api/modules-sync'
 
+const ReportsRoute = ReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProgressRoute = ProgressRouteImport.update({
+  id: '/progress',
+  path: '/progress',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ModulesRoute = ModulesRouteImport.update({
+  id: '/modules',
+  path: '/modules',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LevelsRoute = LevelsRouteImport.update({
   id: '/levels',
   path: '/levels',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CertificatesRoute = CertificatesRouteImport.update({
+  id: '/certificates',
+  path: '/certificates',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AnalyticsRoute = AnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -22,40 +53,129 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiModulesSyncRoute = ApiModulesSyncRouteImport.update({
+  id: '/api/modules-sync',
+  path: '/api/modules-sync',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/analytics': typeof AnalyticsRoute
+  '/certificates': typeof CertificatesRoute
   '/levels': typeof LevelsRoute
+  '/modules': typeof ModulesRoute
+  '/progress': typeof ProgressRoute
+  '/reports': typeof ReportsRoute
+  '/api/modules-sync': typeof ApiModulesSyncRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/analytics': typeof AnalyticsRoute
+  '/certificates': typeof CertificatesRoute
   '/levels': typeof LevelsRoute
+  '/modules': typeof ModulesRoute
+  '/progress': typeof ProgressRoute
+  '/reports': typeof ReportsRoute
+  '/api/modules-sync': typeof ApiModulesSyncRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/analytics': typeof AnalyticsRoute
+  '/certificates': typeof CertificatesRoute
   '/levels': typeof LevelsRoute
+  '/modules': typeof ModulesRoute
+  '/progress': typeof ProgressRoute
+  '/reports': typeof ReportsRoute
+  '/api/modules-sync': typeof ApiModulesSyncRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/levels'
+  fullPaths:
+    | '/'
+    | '/analytics'
+    | '/certificates'
+    | '/levels'
+    | '/modules'
+    | '/progress'
+    | '/reports'
+    | '/api/modules-sync'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/levels'
-  id: '__root__' | '/' | '/levels'
+  to:
+    | '/'
+    | '/analytics'
+    | '/certificates'
+    | '/levels'
+    | '/modules'
+    | '/progress'
+    | '/reports'
+    | '/api/modules-sync'
+  id:
+    | '__root__'
+    | '/'
+    | '/analytics'
+    | '/certificates'
+    | '/levels'
+    | '/modules'
+    | '/progress'
+    | '/reports'
+    | '/api/modules-sync'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AnalyticsRoute: typeof AnalyticsRoute
+  CertificatesRoute: typeof CertificatesRoute
   LevelsRoute: typeof LevelsRoute
+  ModulesRoute: typeof ModulesRoute
+  ProgressRoute: typeof ProgressRoute
+  ReportsRoute: typeof ReportsRoute
+  ApiModulesSyncRoute: typeof ApiModulesSyncRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/reports': {
+      id: '/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof ReportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/progress': {
+      id: '/progress'
+      path: '/progress'
+      fullPath: '/progress'
+      preLoaderRoute: typeof ProgressRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/modules': {
+      id: '/modules'
+      path: '/modules'
+      fullPath: '/modules'
+      preLoaderRoute: typeof ModulesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/levels': {
       id: '/levels'
       path: '/levels'
       fullPath: '/levels'
       preLoaderRoute: typeof LevelsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/certificates': {
+      id: '/certificates'
+      path: '/certificates'
+      fullPath: '/certificates'
+      preLoaderRoute: typeof CertificatesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/analytics': {
+      id: '/analytics'
+      path: '/analytics'
+      fullPath: '/analytics'
+      preLoaderRoute: typeof AnalyticsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -65,13 +185,36 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/modules-sync': {
+      id: '/api/modules-sync'
+      path: '/api/modules-sync'
+      fullPath: '/api/modules-sync'
+      preLoaderRoute: typeof ApiModulesSyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AnalyticsRoute: AnalyticsRoute,
+  CertificatesRoute: CertificatesRoute,
   LevelsRoute: LevelsRoute,
+  ModulesRoute: ModulesRoute,
+  ProgressRoute: ProgressRoute,
+  ReportsRoute: ReportsRoute,
+  ApiModulesSyncRoute: ApiModulesSyncRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
