@@ -96,14 +96,17 @@ export function HRTable({
                     </span>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                      <span>{days}d</span>
-                      {overdue && (
-                        <Badge className="gap-1 bg-warning text-warning-foreground hover:bg-warning">
-                          <AlertCircle className="h-3 w-3" /> Overdue
-                        </Badge>
-                      )}
-                    </div>
+                    {(() => {
+                      const c = completionFor(lessons, progress[t.id]);
+                      return (
+                        <div className="w-28 space-y-1">
+                          <Progress value={c.pct} className="h-1.5" />
+                          <div className="text-[11px] text-muted-foreground">
+                            {c.done}/{c.total} • {c.pct}%
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </TableCell>
                   <TableCell>
                     <Select
