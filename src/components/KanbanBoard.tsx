@@ -1,7 +1,10 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import { LEVELS, LEVEL_INFO, daysBetween, type Trainee } from "@/lib/trainees";
 import { AlertCircle } from "lucide-react";
+import { completionFor, type ProgressMap } from "@/lib/progress";
+import type { Lesson } from "@/lib/modules";
 
 function StatusBadge({ status }: { status: Trainee["status"] }) {
   const variant =
@@ -13,9 +16,18 @@ function StatusBadge({ status }: { status: Trainee["status"] }) {
   );
 }
 
-export function TraineeCard({ t }: { t: Trainee }) {
+export function TraineeCard({
+  t,
+  lessons,
+  progress,
+}: {
+  t: Trainee;
+  lessons: Lesson[];
+  progress: ProgressMap;
+}) {
   const days = daysBetween(t.levelSinceDate);
   const overdue = t.status === "Active" && days > 30;
+  const c = completionFor(lessons, progress[t.id]);
   return (
     <Card className="border-l-4" style={{ borderLeftColor: `var(--level-${t.currentLevel})` }}>
       <CardContent className="space-y-2 p-3">
@@ -25,6 +37,15 @@ export function TraineeCard({ t }: { t: Trainee }) {
             <div className="truncate text-xs text-muted-foreground">{t.manager || "—"}</div>
           </div>
           <StatusBadge status={t.status} />
+        </div>
+        <div className="space-y-1">
+          <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+            <span>Training</span>
+            <span>
+              {c.done}/{c.total} • {c.pct}%
+            </span>
+          </div>
+          <Progress value={c.pct} className="h-1.5" />
         </div>
         <div className="flex flex-wrap items-center gap-1.5 text-xs">
           <span className="text-muted-foreground">{days}d at level</span>
@@ -40,7 +61,15 @@ export function TraineeCard({ t }: { t: Trainee }) {
   );
 }
 
-export function KanbanBoard({ trainees }: { trainees: Trainee[] }) {
+export function KanbanBoard({
+  trainees,
+  lessons,
+  progress,
+}: {
+  trainees: Trainee[];
+  lessons: Lesson[];
+  progress: ProgressMap;
+}) {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       {LEVELS.map((lvl) => {
@@ -60,7 +89,9 @@ export function KanbanBoard({ trainees }: { trainees: Trainee[] }) {
                   No trainees
                 </p>
               ) : (
-                items.map((t) => <TraineeCard key={t.id} t={t} />)
+                items.map((t) => (
+                  <TraineeCard key={t.id} t={t} lessons={lessons} progress={progress} />
+                ))
               )}
             </div>
           </div>

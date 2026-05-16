@@ -130,9 +130,11 @@ function Index() {
             onUpdate={update}
             onPromote={guardedPromote}
             onRemove={remove}
+            lessons={lessons}
+            progress={progress}
           />
         ) : (
-          <KanbanBoard trainees={filtered} />
+          <KanbanBoard trainees={filtered} lessons={lessons} progress={progress} />
         )}
       </div>
     </AppShell>

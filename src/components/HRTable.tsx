@@ -30,17 +30,24 @@ import { LEVEL_INFO, daysBetween, nextLevel, type Trainee, type Status } from "@
 import { ChevronUp, Pencil, Trash2, AlertCircle } from "lucide-react";
 import { EditTraineeDialog } from "./EditTraineeDialog";
 import { toast } from "sonner";
+import { Progress } from "@/components/ui/progress";
+import { completionFor, type ProgressMap } from "@/lib/progress";
+import type { Lesson } from "@/lib/modules";
 
 export function HRTable({
   trainees,
   onUpdate,
   onPromote,
   onRemove,
+  lessons,
+  progress,
 }: {
   trainees: Trainee[];
   onUpdate: (id: string, patch: Partial<Trainee>) => void;
   onPromote: (id: string) => void;
   onRemove: (id: string) => void;
+  lessons: Lesson[];
+  progress: ProgressMap;
 }) {
   const [editing, setEditing] = useState<Trainee | null>(null);
   const [deleting, setDeleting] = useState<Trainee | null>(null);
@@ -66,6 +73,7 @@ export function HRTable({
               <TableHead>Manager</TableHead>
               <TableHead>Level</TableHead>
               <TableHead>Days at level</TableHead>
+              <TableHead>Training</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -96,6 +104,19 @@ export function HRTable({
                         </Badge>
                       )}
                     </div>
+                  </TableCell>
+                  <TableCell>
+                    {(() => {
+                      const c = completionFor(lessons, progress[t.id]);
+                      return (
+                        <div className="w-28 space-y-1">
+                          <Progress value={c.pct} className="h-1.5" />
+                          <div className="text-[11px] text-muted-foreground">
+                            {c.done}/{c.total} • {c.pct}%
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </TableCell>
                   <TableCell>
                     <Select
