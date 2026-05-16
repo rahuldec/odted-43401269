@@ -16,7 +16,7 @@ export function LevelLegend() {
               </span>
               <div className="min-w-0">
                 <div className="text-sm font-medium text-foreground">
-                  {info.name} · {info.pay}
+                  {info.name}
                 </div>
                 <div className="text-xs text-muted-foreground">{info.desc}</div>
               </div>

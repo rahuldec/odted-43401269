@@ -25,29 +25,25 @@ export const LEVELS: Level[] = [0, 1, 2, 3];
 
 export const LEVEL_INFO: Record<
   Level,
-  { name: string; pay: string; desc: string; tokenClass: string }
+  { name: string; desc: string; tokenClass: string }
 > = {
   0: {
     name: "Level 0",
-    pay: "₹0",
     desc: "Pre-onboarding, video training",
     tokenClass: "bg-level-0 text-level-0-foreground",
   },
   1: {
     name: "Level 1",
-    pay: "₹8,000",
     desc: "Ready for client calls & supporting visits",
     tokenClass: "bg-level-1 text-level-1-foreground",
   },
   2: {
     name: "Level 2",
-    pay: "₹10,000",
     desc: "Solo client visits, owns small clients",
     tokenClass: "bg-level-2 text-level-2-foreground",
   },
   3: {
     name: "Level 3",
-    pay: "₹12,000",
     desc: "Contributes to complex clients",
     tokenClass: "bg-level-3 text-level-3-foreground",
   },

@@ -30,7 +30,7 @@ export function SummaryCards({ trainees }: { trainees: Trainee[] }) {
               LEVEL {level}
             </span>
             <div className="mt-2 text-2xl font-semibold">{count}</div>
-            <div className="text-xs text-muted-foreground">{LEVEL_INFO[level].pay}</div>
+            <div className="text-xs text-muted-foreground">{LEVEL_INFO[level].desc}</div>
           </CardContent>
         </Card>
       ))}

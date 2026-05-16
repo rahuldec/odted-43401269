@@ -39,7 +39,7 @@ function LevelsPage() {
                     L{l}
                   </span>
                   <CardTitle className="text-lg">
-                    {info.name} — {info.pay}
+                    {info.name}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="text-sm text-muted-foreground">{info.desc}</CardContent>
