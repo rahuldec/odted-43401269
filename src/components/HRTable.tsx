@@ -30,17 +30,24 @@ import { LEVEL_INFO, daysBetween, nextLevel, type Trainee, type Status } from "@
 import { ChevronUp, Pencil, Trash2, AlertCircle } from "lucide-react";
 import { EditTraineeDialog } from "./EditTraineeDialog";
 import { toast } from "sonner";
+import { Progress } from "@/components/ui/progress";
+import { completionFor, type ProgressMap } from "@/lib/progress";
+import type { Lesson } from "@/lib/modules";
 
 export function HRTable({
   trainees,
   onUpdate,
   onPromote,
   onRemove,
+  lessons,
+  progress,
 }: {
   trainees: Trainee[];
   onUpdate: (id: string, patch: Partial<Trainee>) => void;
   onPromote: (id: string) => void;
   onRemove: (id: string) => void;
+  lessons: Lesson[];
+  progress: ProgressMap;
 }) {
   const [editing, setEditing] = useState<Trainee | null>(null);
   const [deleting, setDeleting] = useState<Trainee | null>(null);
