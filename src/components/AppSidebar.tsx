@@ -7,8 +7,9 @@ import {
   FileText,
   Award,
   Layers,
-  Building2,
 } from "lucide-react";
+import logoUrl from "@/assets/okie-dokie-logo.png";
+
 import {
   Sidebar,
   SidebarContent,
@@ -40,8 +41,8 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader>
         <div className="flex items-center gap-2 px-2 py-1.5">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground">
-            <Building2 className="h-4 w-4" />
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-md bg-background">
+            <img src={logoUrl} alt="Okie Dokie Solutions logo" className="h-full w-full object-contain" />
           </div>
           <div className="min-w-0 group-data-[collapsible=icon]:hidden">
             <p className="truncate text-sm font-semibold leading-tight">Okie Dokie</p>
