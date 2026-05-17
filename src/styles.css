@@ -157,8 +157,36 @@
     border-color: var(--color-border);
   }
 
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "ss01", "cv11";
+    letter-spacing: -0.011em;
+  }
+
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+      "Inter", system-ui, sans-serif;
   }
+
+  h1, h2, h3, h4 {
+    letter-spacing: -0.022em;
+  }
+}
+
+@utility apple-surface {
+  background: color-mix(in oklab, var(--card) 70%, transparent);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border: 1px solid color-mix(in oklab, var(--foreground) 6%, transparent);
+  box-shadow:
+    0 1px 0 color-mix(in oklab, white 60%, transparent) inset,
+    0 1px 2px color-mix(in oklab, var(--foreground) 4%, transparent),
+    0 8px 24px -12px color-mix(in oklab, var(--foreground) 10%, transparent);
+}
+
+@utility apple-hairline {
+  border: 1px solid color-mix(in oklab, var(--foreground) 8%, transparent);
 }
