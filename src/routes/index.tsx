@@ -37,7 +37,7 @@ function Index() {
   const [role] = useRole();
   const { trainees, hydrated, add, update, remove, promote } = useTrainees();
   const { lessons } = useLessons();
-  const { progress } = useProgress();
+  const { progress, setLesson } = useProgress();
   const [managerFilter, setManagerFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
@@ -134,6 +134,7 @@ function Index() {
             onRemove={remove}
             lessons={lessons}
             progress={progress}
+            onSetLesson={setLesson}
           />
         ) : (
           <KanbanBoard trainees={filtered} lessons={lessons} progress={progress} />
