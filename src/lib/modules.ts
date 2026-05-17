@@ -100,24 +100,27 @@ export function lessonsFromCSV(csv: string): Lesson[] {
   let moduleNo = 0;
   let moduleName = "";
   let idxInModule = 0;
+  let day = "";
   for (let r = 1; r < rows.length; r++) {
-    const [sr, mod, lesson, link, assn] = rows[r];
+    const [sr, mod, dayCol, lesson, link, assn] = rows[r];
     if (sr && sr.trim()) {
       moduleNo = parseInt(sr.trim(), 10) || moduleNo;
       moduleName = (mod || "").trim() || moduleName;
       idxInModule = 0;
     }
+    if (dayCol && dayCol.trim()) day = dayCol.trim();
     const lessonName = (lesson || "").trim();
     const videoUrl = (link || "").trim();
-    if (!lessonName || !videoUrl) continue;
+    const assignmentUrl = (assn || "").trim();
+    if (!lessonName || (!videoUrl && !assignmentUrl)) continue;
     idxInModule++;
     out.push({
       id: `l-${moduleNo}-${idxInModule}`,
       moduleNo,
       moduleName,
-      lessonName,
+      lessonName: day ? `${day} · ${lessonName}` : lessonName,
       videoUrl,
-      assignmentUrl: (assn || "").trim() || undefined,
+      assignmentUrl: assignmentUrl || undefined,
       level: 0,
     });
   }
