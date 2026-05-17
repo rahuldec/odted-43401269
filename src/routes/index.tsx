@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
-import { LevelLegend } from "@/components/LevelLegend";
+
 import { SummaryCards } from "@/components/SummaryCards";
 import { KanbanBoard } from "@/components/KanbanBoard";
 import { HRTable } from "@/components/HRTable";
@@ -87,7 +87,6 @@ function Index() {
         </div>
 
         <SummaryCards trainees={trainees} />
-        <LevelLegend />
 
         {role === "management" && (
           <div className="flex flex-wrap items-end gap-3">
