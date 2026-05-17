@@ -1,6 +1,32 @@
-import { Card, CardContent } from "@/components/ui/card";
 import { LEVELS, LEVEL_INFO, promotedThisMonth, type Trainee } from "@/lib/trainees";
 import { Users, TrendingUp } from "lucide-react";
+
+function Stat({
+  label,
+  value,
+  hint,
+  icon,
+  accent,
+}: {
+  label: string;
+  value: string | number;
+  hint?: string;
+  icon?: React.ReactNode;
+  accent?: React.ReactNode;
+}) {
+  return (
+    <div className="apple-surface group relative overflow-hidden rounded-2xl p-4 transition-all duration-300 hover:-translate-y-0.5">
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+          {label}
+        </p>
+        {icon ?? accent}
+      </div>
+      <div className="mt-2 text-[28px] font-semibold leading-none tracking-tight">{value}</div>
+      {hint && <p className="mt-1.5 text-xs text-muted-foreground">{hint}</p>}
+    </div>
+  );
+}
 
 export function SummaryCards({ trainees }: { trainees: Trainee[] }) {
   const total = trainees.length;
@@ -12,37 +38,32 @@ export function SummaryCards({ trainees }: { trainees: Trainee[] }) {
 
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
-      <Card>
-        <CardContent className="flex items-center gap-3 p-4">
-          <Users className="h-5 w-5 text-muted-foreground" />
-          <div>
-            <div className="text-2xl font-semibold">{total}</div>
-            <div className="text-xs text-muted-foreground">Total trainees</div>
-          </div>
-        </CardContent>
-      </Card>
+      <Stat
+        label="Total"
+        value={total}
+        hint="Trainees in program"
+        icon={<Users className="h-4 w-4 text-muted-foreground" />}
+      />
       {counts.map(({ level, count }) => (
-        <Card key={level}>
-          <CardContent className="p-4">
+        <Stat
+          key={level}
+          label={`Level ${level}`}
+          value={count}
+          hint={LEVEL_INFO[level].desc}
+          accent={
             <span
-              className={`inline-block rounded px-2 py-0.5 text-[10px] font-semibold ${LEVEL_INFO[level].tokenClass}`}
-            >
-              LEVEL {level}
-            </span>
-            <div className="mt-2 text-2xl font-semibold">{count}</div>
-            <div className="text-xs text-muted-foreground">{LEVEL_INFO[level].desc}</div>
-          </CardContent>
-        </Card>
+              className="h-2.5 w-2.5 rounded-full ring-2 ring-background"
+              style={{ background: `var(--level-${level})` }}
+            />
+          }
+        />
       ))}
-      <Card>
-        <CardContent className="flex items-center gap-3 p-4">
-          <TrendingUp className="h-5 w-5 text-muted-foreground" />
-          <div>
-            <div className="text-2xl font-semibold">{promoted}</div>
-            <div className="text-xs text-muted-foreground">Promoted this month</div>
-          </div>
-        </CardContent>
-      </Card>
+      <Stat
+        label="Promoted"
+        value={promoted}
+        hint="This month"
+        icon={<TrendingUp className="h-4 w-4 text-muted-foreground" />}
+      />
     </div>
   );
 }

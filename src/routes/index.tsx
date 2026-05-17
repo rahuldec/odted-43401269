@@ -71,13 +71,16 @@ function Index() {
 
   return (
     <AppShell>
-      <div className="space-y-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 className="text-2xl font-semibold tracking-tight">
-              {role === "hr" ? "HR Dashboard" : "Management Overview"}
+      <div className="mx-auto max-w-7xl space-y-8">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div className="space-y-1">
+            <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
+              {role === "hr" ? "Human Resources" : "Management"}
+            </p>
+            <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+              {role === "hr" ? "Dashboard" : "Overview"}
             </h2>
-            <p className="text-sm text-muted-foreground">
+            <p className="max-w-xl text-sm text-muted-foreground">
               {role === "hr"
                 ? "Add, promote and manage trainees through the program."
                 : "Read-only view of all trainees and their progress."}
