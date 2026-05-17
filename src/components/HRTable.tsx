@@ -224,7 +224,7 @@ export function HRTable({
                             {c.done}/{c.total} complete • {c.pct}%
                           </p>
                         </div>
-                        <ScrollArea className="max-h-[360px]">
+                        <ScrollArea className="h-[360px]">
                           <div className="space-y-3 p-3">
                             {groupByModule(lessons).map((g) => (
                               <div key={g.moduleNo} className="space-y-1.5">
