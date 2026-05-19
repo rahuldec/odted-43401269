@@ -9,6 +9,8 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TrainingModuleRouteImport } from './routes/training-module'
+import { Route as TrainingRouteImport } from './routes/training'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as ProgressRouteImport } from './routes/progress'
 import { Route as ModulesRouteImport } from './routes/modules'
@@ -18,6 +20,16 @@ import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiModulesSyncRouteImport } from './routes/api/modules-sync'
 
+const TrainingModuleRoute = TrainingModuleRouteImport.update({
+  id: '/training-module',
+  path: '/training-module',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TrainingRoute = TrainingRouteImport.update({
+  id: '/training',
+  path: '/training',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ReportsRoute = ReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
@@ -67,6 +79,8 @@ export interface FileRoutesByFullPath {
   '/modules': typeof ModulesRoute
   '/progress': typeof ProgressRoute
   '/reports': typeof ReportsRoute
+  '/training': typeof TrainingRoute
+  '/training-module': typeof TrainingModuleRoute
   '/api/modules-sync': typeof ApiModulesSyncRoute
 }
 export interface FileRoutesByTo {
@@ -77,6 +91,8 @@ export interface FileRoutesByTo {
   '/modules': typeof ModulesRoute
   '/progress': typeof ProgressRoute
   '/reports': typeof ReportsRoute
+  '/training': typeof TrainingRoute
+  '/training-module': typeof TrainingModuleRoute
   '/api/modules-sync': typeof ApiModulesSyncRoute
 }
 export interface FileRoutesById {
@@ -88,6 +104,8 @@ export interface FileRoutesById {
   '/modules': typeof ModulesRoute
   '/progress': typeof ProgressRoute
   '/reports': typeof ReportsRoute
+  '/training': typeof TrainingRoute
+  '/training-module': typeof TrainingModuleRoute
   '/api/modules-sync': typeof ApiModulesSyncRoute
 }
 export interface FileRouteTypes {
@@ -100,6 +118,8 @@ export interface FileRouteTypes {
     | '/modules'
     | '/progress'
     | '/reports'
+    | '/training'
+    | '/training-module'
     | '/api/modules-sync'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -110,6 +130,8 @@ export interface FileRouteTypes {
     | '/modules'
     | '/progress'
     | '/reports'
+    | '/training'
+    | '/training-module'
     | '/api/modules-sync'
   id:
     | '__root__'
@@ -120,6 +142,8 @@ export interface FileRouteTypes {
     | '/modules'
     | '/progress'
     | '/reports'
+    | '/training'
+    | '/training-module'
     | '/api/modules-sync'
   fileRoutesById: FileRoutesById
 }
@@ -131,11 +155,27 @@ export interface RootRouteChildren {
   ModulesRoute: typeof ModulesRoute
   ProgressRoute: typeof ProgressRoute
   ReportsRoute: typeof ReportsRoute
+  TrainingRoute: typeof TrainingRoute
+  TrainingModuleRoute: typeof TrainingModuleRoute
   ApiModulesSyncRoute: typeof ApiModulesSyncRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/training-module': {
+      id: '/training-module'
+      path: '/training-module'
+      fullPath: '/training-module'
+      preLoaderRoute: typeof TrainingModuleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/training': {
+      id: '/training'
+      path: '/training'
+      fullPath: '/training'
+      preLoaderRoute: typeof TrainingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reports': {
       id: '/reports'
       path: '/reports'
@@ -203,8 +243,20 @@ const rootRouteChildren: RootRouteChildren = {
   ModulesRoute: ModulesRoute,
   ProgressRoute: ProgressRoute,
   ReportsRoute: ReportsRoute,
+  TrainingRoute: TrainingRoute,
+  TrainingModuleRoute: TrainingModuleRoute,
   ApiModulesSyncRoute: ApiModulesSyncRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
