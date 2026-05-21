@@ -29,8 +29,8 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { LEVEL_INFO, daysBetween, nextLevel, type Trainee, type Status } from "@/lib/trainees";
-import { ChevronUp, Pencil, Trash2, AlertCircle, ListChecks, X } from "lucide-react";
+import { LEVEL_INFO, nextLevel, type Trainee, type Status } from "@/lib/trainees";
+import { ChevronUp, Pencil, Trash2, ListChecks, X } from "lucide-react";
 import { EditTraineeDialog } from "./EditTraineeDialog";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
@@ -162,7 +162,6 @@ export function HRTable({
               <TableHead>Phone</TableHead>
               <TableHead>Manager</TableHead>
               <TableHead>Level</TableHead>
-              <TableHead>Days at level</TableHead>
               <TableHead>Training</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Actions</TableHead>
@@ -170,8 +169,6 @@ export function HRTable({
           </TableHeader>
           <TableBody>
             {trainees.map((t) => {
-              const days = daysBetween(t.levelSinceDate);
-              const overdue = t.status === "Active" && days > 30;
               const nl = nextLevel(t.currentLevel);
               const traineeProg = progress[t.id] || {};
               const c = completionFor(lessons, traineeProg);
@@ -195,16 +192,6 @@ export function HRTable({
                     >
                       L{t.currentLevel}
                     </span>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <span>{days}d</span>
-                      {overdue && (
-                        <Badge className="gap-1 bg-warning text-warning-foreground hover:bg-warning">
-                          <AlertCircle className="h-3 w-3" /> Overdue
-                        </Badge>
-                      )}
-                    </div>
                   </TableCell>
                   <TableCell>
                     <Popover>
