@@ -29,7 +29,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { LEVEL_INFO, nextLevel, type Trainee, type Status } from "@/lib/trainees";
+import { LEVEL_INFO, daysBetween, nextLevel, type Trainee, type Status } from "@/lib/trainees";
 import { ChevronUp, Pencil, Trash2, ListChecks, X } from "lucide-react";
 import { EditTraineeDialog } from "./EditTraineeDialog";
 import { toast } from "sonner";
@@ -162,6 +162,7 @@ export function HRTable({
               <TableHead>Phone</TableHead>
               <TableHead>Manager</TableHead>
               <TableHead>Level</TableHead>
+              <TableHead>Date of Joining</TableHead>
               <TableHead>Training</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Actions</TableHead>
@@ -169,6 +170,7 @@ export function HRTable({
           </TableHeader>
           <TableBody>
             {trainees.map((t) => {
+              const daysSinceJoin = daysBetween(t.joinDate);
               const nl = nextLevel(t.currentLevel);
               const traineeProg = progress[t.id] || {};
               const c = completionFor(lessons, traineeProg);
@@ -192,6 +194,14 @@ export function HRTable({
                     >
                       L{t.currentLevel}
                     </span>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-sm font-medium">{t.joinDate}</span>
+                      <span className="text-[11px] text-muted-foreground">
+                        {daysSinceJoin} {daysSinceJoin === 1 ? "day" : "days"} ago
+                      </span>
+                    </div>
                   </TableCell>
                   <TableCell>
                     <Popover>
