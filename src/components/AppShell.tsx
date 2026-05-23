@@ -12,7 +12,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border/60 bg-background/70 px-3 backdrop-blur-xl backdrop-saturate-150 sm:px-5">
             <SidebarTrigger />
-            <img src={logoUrl} alt="Okie Dokie Solutions logo" className="h-8 w-8 object-contain" />
+            <img src={logoUrl} alt="Okie Dokie Solutions logo" className="h-9 w-9 object-contain" />
             <div className="hidden sm:block">
               <h1 className="text-sm font-semibold leading-tight tracking-tight">Okie Dokie Solutions</h1>
               <p className="text-[11px] text-muted-foreground">Training Program Tracker</p>
