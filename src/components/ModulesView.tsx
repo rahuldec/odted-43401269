@@ -142,8 +142,6 @@ export function ModulesView() {
         .od-progress-fill { height: 6px; border-radius: 99px; background: #E05A2B; transition: width 0.4s ease; }
         .od-progress-pct { font-size: 12px; font-weight: 600; color: #E05A2B; min-width: 34px; text-align: right; }
 
-
-
         /* ── module grid ── */
         .od-body { padding: 24px 28px; background: #F7F6F3; }
         .od-section-bar {
@@ -191,19 +189,22 @@ export function ModulesView() {
         .od-prog-fill { height: 4px; border-radius: 99px; background: #E05A2B; transition: width 0.3s; }
         .od-prog-meta {
           display: flex; justify-content: space-between;
-          font-size: 11px; color: #B4B2A9; margin-bottom: 12px;
+          font-size: 11px; color: #888780; margin-bottom: 12px;
         }
         .od-lesson-list {
           border-top: 0.5px solid #F1EFE8; padding-top: 10px;
           display: flex; flex-direction: column; gap: 5px;
         }
+
+        /* ── FIXED: lesson row — darker text + medium weight ── */
         .od-lesson-row {
           display: flex; align-items: center; gap: 8px;
-          font-size: 12px; color: #5F5E5A;
+          font-size: 12px; color: #1a1a18; font-weight: 500;
           padding: 3px 0; cursor: pointer;
           border-radius: 6px; transition: background 0.1s;
         }
         .od-lesson-row:hover { background: #F7F6F3; padding-left: 4px; }
+
         .od-card-footer {
           display: flex; align-items: center; justify-content: flex-start;
           border-top: 0.5px solid #F1EFE8;
@@ -260,8 +261,6 @@ export function ModulesView() {
             <span className="od-progress-pct">{overallPct}%</span>
           </div>
         )}
-
-
 
         {/* ── Module cards grid ── */}
         <div className="od-body">
@@ -329,7 +328,7 @@ export function ModulesView() {
                               {complete ? (
                                 <CheckCircle2 size={13} style={{ color: "#E05A2B", flexShrink: 0 }} />
                               ) : (
-                                <PlayCircle size={13} style={{ color: "#D3D1C7", flexShrink: 0 }} />
+                                <PlayCircle size={13} style={{ color: "#B4B2A9", flexShrink: 0 }} />
                               )}
                               <span style={{ flex: 1 }}>{l.lessonName}</span>
                               {l.assignmentUrl && (
