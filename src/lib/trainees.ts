@@ -8,6 +8,7 @@ export type Trainee = {
   name: string;
   phone: string;
   joinDate: string;
+  exitDate?: string;        // set automatically when status → "Exited"
   currentLevel: Level;
   levelSinceDate: string;
   manager: string;
@@ -121,7 +122,21 @@ export function useTrainees() {
 
   const update = useCallback(
     (id: string, patch: Partial<Trainee>) => {
-      persist((p) => p.map((t) => (t.id === id ? { ...t, ...patch } : t)));
+      persist((p) =>
+        p.map((t) => {
+          if (t.id !== id) return t;
+          const updated = { ...t, ...patch };
+          // Auto-set exitDate when status changes to Exited
+          if (patch.status === "Exited" && !t.exitDate) {
+            updated.exitDate = todayISO();
+          }
+          // Clear exitDate if status changes away from Exited
+          if (patch.status && patch.status !== "Exited") {
+            updated.exitDate = undefined;
+          }
+          return updated;
+        })
+      );
     },
     [persist],
   );
