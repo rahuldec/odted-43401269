@@ -93,5 +93,18 @@ export function useProgress() {
     [persist],
   );
 
-  return { progress, hydrated, setLesson, resetTrainee };
+  return { progress, hydrated, setLesson, addWatchSeconds, resetTrainee };
+}
+
+export function totalWatchSeconds(traineeProg?: Record<string, LessonProgress>) {
+  if (!traineeProg) return 0;
+  return Object.values(traineeProg).reduce((sum, p) => sum + (p.watchSeconds || 0), 0);
+}
+
+export function formatWatchTime(seconds: number) {
+  if (seconds < 60) return `${seconds}s`;
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  if (h === 0) return `${m}m`;
+  return `${h}h ${m}m`;
 }
