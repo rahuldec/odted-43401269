@@ -5,6 +5,7 @@ export type LessonProgress = {
   watched: boolean;
   assignmentDone: boolean;
   completedAt?: string;
+  watchSeconds?: number;
 };
 
 export type ProgressMap = Record<string, Record<string, LessonProgress>>;

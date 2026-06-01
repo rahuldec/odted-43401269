@@ -14,6 +14,8 @@ export type Trainee = {
   manager: string;
   status: Status;
   notes?: string;
+  username?: string;        // trainee portal login
+  password?: string;        // trainee portal login (plain — local-only demo)
   history: { level: Level; date: string }[];
 };
 
@@ -102,7 +104,7 @@ export function useTrainees() {
   }, []);
 
   const add = useCallback(
-    (input: { name: string; phone: string; joinDate: string; manager: string; notes?: string }) => {
+    (input: { name: string; phone: string; joinDate: string; manager: string; notes?: string; username?: string; password?: string }) => {
       const t: Trainee = {
         id: uid(),
         name: input.name.trim(),
@@ -113,6 +115,8 @@ export function useTrainees() {
         manager: input.manager.trim(),
         status: "Active",
         notes: input.notes?.trim() || "",
+        username: input.username?.trim() || "",
+        password: input.password || "",
         history: [{ level: 0, date: input.joinDate }],
       };
       persist((p) => [t, ...p]);
