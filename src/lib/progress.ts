@@ -69,6 +69,19 @@ export function useProgress() {
     [persist],
   );
 
+  const addWatchSeconds = useCallback(
+    (traineeId: string, lessonId: string, secs: number) => {
+      if (!traineeId || !lessonId || secs <= 0) return;
+      persist((p) => {
+        const tp = { ...(p[traineeId] || {}) };
+        const cur = tp[lessonId] || { watched: false, assignmentDone: false };
+        tp[lessonId] = { ...cur, watchSeconds: (cur.watchSeconds || 0) + secs };
+        return { ...p, [traineeId]: tp };
+      });
+    },
+    [persist],
+  );
+
   const resetTrainee = useCallback(
     (traineeId: string) => {
       persist((p) => {
