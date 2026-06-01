@@ -5,7 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { loginAsAdmin, loginAsTrainee, isAuthenticated, getAuthRole } from "@/lib/auth";
+import {
+  loginAsAdmin,
+  loginAsTraineeWithCredentials,
+  getAuthRole,
+} from "@/lib/auth";
+import { useTrainees } from "@/lib/trainees";
 import logoUrl from "@/assets/okie-dokie-logo.png";
 import { Lock, GraduationCap, ShieldCheck, ArrowLeft, User } from "lucide-react";
 
@@ -34,21 +39,27 @@ export const Route = createFileRoute("/login")({
 function LoginPage() {
   const navigate = useNavigate();
   const search = useSearch({ from: "/login" });
-  const [view, setView] = useState<"select" | "admin-login">("select");
-  
+  const { trainees } = useTrainees();
+  const [view, setView] = useState<"select" | "admin-login" | "trainee-login">("select");
+
   // Form states
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleTraineeAccess = () => {
+  const handleTraineeSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     setIsLoading(true);
     setTimeout(() => {
-      loginAsTrainee();
+      const t = loginAsTraineeWithCredentials(username, password, trainees);
       setIsLoading(false);
-      toast.success("Welcome to the Trainee Portal");
-      navigate({ to: "/modules" });
-    }, 400);
+      if (t) {
+        toast.success(`Welcome, ${t.name}`);
+        navigate({ to: "/modules" });
+      } else {
+        toast.error("Invalid username or password");
+      }
+    }, 350);
   };
 
   const handleAdminSubmit = (e: React.FormEvent) => {
