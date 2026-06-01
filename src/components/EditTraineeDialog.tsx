@@ -50,7 +50,7 @@ export function EditTraineeDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit trainee</DialogTitle>
         </DialogHeader>
@@ -120,6 +120,32 @@ export function EditTraineeDialog({
             <Label>Assigned manager / team</Label>
             <Input value={form.manager} onChange={(e) => set("manager", e.target.value)} />
           </div>
+
+          <div className="rounded-md border bg-muted/30 p-3 space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Trainee portal credentials
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="grid gap-1.5">
+                <Label>Username</Label>
+                <Input
+                  value={form.username ?? ""}
+                  onChange={(e) => set("username", e.target.value)}
+                  autoComplete="off"
+                />
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Password</Label>
+                <Input
+                  type="text"
+                  value={form.password ?? ""}
+                  onChange={(e) => set("password", e.target.value)}
+                  autoComplete="new-password"
+                />
+              </div>
+            </div>
+          </div>
+
           <div className="grid gap-1.5">
             <Label>Notes</Label>
             <Textarea
