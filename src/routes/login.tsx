@@ -101,9 +101,9 @@ function LoginPage() {
 
           <div className="grid gap-6 md:grid-cols-2">
             {/* Trainee Option */}
-            <Card 
+            <Card
               className="group cursor-pointer border border-border/40 bg-card/60 shadow-lg backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-primary/5 flex flex-col justify-between"
-              onClick={handleTraineeAccess}
+              onClick={() => { setUsername(""); setPassword(""); setView("trainee-login"); }}
             >
               <CardHeader className="space-y-3 pb-4">
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary group-hover:scale-110 transition-transform duration-300">
@@ -112,24 +112,24 @@ function LoginPage() {
                 <div className="space-y-1">
                   <CardTitle className="text-xl font-bold">Trainee Portal</CardTitle>
                   <CardDescription className="text-xs leading-relaxed">
-                    Access training materials, watch learning videos, and complete assignments.
+                    Sign in with the credentials provided by your HR to access training videos.
                   </CardDescription>
                 </div>
               </CardHeader>
               <CardContent className="pt-2">
-                <Button 
-                  className="w-full font-medium" 
+                <Button
+                  className="w-full font-medium"
                   disabled={isLoading}
                 >
-                  Enter Trainee Portal
+                  Sign in as trainee
                 </Button>
               </CardContent>
             </Card>
 
             {/* Admin Option */}
-            <Card 
+            <Card
               className="group cursor-pointer border border-border/40 bg-card/60 shadow-lg backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-primary/5 flex flex-col justify-between"
-              onClick={() => setView("admin-login")}
+              onClick={() => { setUsername(""); setPassword(""); setView("admin-login"); }}
             >
               <CardHeader className="space-y-3 pb-4">
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-500 group-hover:scale-110 transition-transform duration-300">
@@ -157,8 +157,8 @@ function LoginPage() {
       ) : (
         <Card className="relative w-full max-w-[400px] border border-border/40 bg-card/60 shadow-2xl backdrop-blur-xl">
           <CardHeader className="space-y-3 pb-6">
-            <button 
-              onClick={() => setView("select")} 
+            <button
+              onClick={() => setView("select")}
               className="inline-flex items-center text-xs text-muted-foreground hover:text-foreground transition-colors absolute top-6 left-6"
             >
               <ArrowLeft className="mr-1.5 h-3.5 w-3.5" /> Back
@@ -167,22 +167,31 @@ function LoginPage() {
               <img src={logoUrl} alt="Okie Dokie logo" className="h-8 w-8 object-contain" />
             </div>
             <div className="space-y-1 text-center">
-              <CardTitle className="text-2xl font-bold tracking-tight text-foreground">Admin Login</CardTitle>
+              <CardTitle className="text-2xl font-bold tracking-tight text-foreground">
+                {view === "admin-login" ? "Admin Login" : "Trainee Sign In"}
+              </CardTitle>
               <CardDescription className="text-xs">
-                Enter your management credentials to access all controls
+                {view === "admin-login"
+                  ? "Enter your management credentials to access all controls"
+                  : "Use the username and password your HR shared with you"}
               </CardDescription>
             </div>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleAdminSubmit} className="space-y-4">
+            <form
+              onSubmit={view === "admin-login" ? handleAdminSubmit : handleTraineeSubmit}
+              className="space-y-4"
+            >
               <div className="space-y-1.5">
-                <Label htmlFor="username" className="text-xs font-semibold">User ID</Label>
+                <Label htmlFor="username" className="text-xs font-semibold">
+                  {view === "admin-login" ? "User ID" : "Username"}
+                </Label>
                 <div className="relative">
                   <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="username"
                     type="text"
-                    placeholder="Enter ID"
+                    placeholder={view === "admin-login" ? "Enter ID" : "Your username"}
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     required
