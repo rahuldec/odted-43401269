@@ -30,11 +30,11 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { LEVEL_INFO, daysBetween, nextLevel, type Trainee, type Status } from "@/lib/trainees";
-import { ChevronUp, Pencil, Trash2, ListChecks, X, ArrowUpDown } from "lucide-react";
+import { ChevronUp, Pencil, Trash2, ListChecks, X, ArrowUpDown, Clock } from "lucide-react";
 import { EditTraineeDialog } from "./EditTraineeDialog";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
-import { completionFor, isLessonComplete, type LessonProgress, type ProgressMap } from "@/lib/progress";
+import { completionFor, isLessonComplete, totalWatchSeconds, formatWatchTime, type LessonProgress, type ProgressMap } from "@/lib/progress";
 import { groupByModule, type Lesson } from "@/lib/modules";
 
 type SortKey = "name" | "level" | "joinDate" | "progress" | "status";
@@ -261,6 +261,7 @@ export function HRTable({
                 <TableHead><SortHeader label="Joined" col="joinDate" /></TableHead>
                 {tab === "exited" && <TableHead>Exit Date</TableHead>}
                 <TableHead><SortHeader label="Progress" col="progress" /></TableHead>
+                <TableHead>Watch time</TableHead>
                 <TableHead><SortHeader label="Status" col="status" /></TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -395,6 +396,12 @@ export function HRTable({
                           </ScrollArea>
                         </PopoverContent>
                       </Popover>
+                    </TableCell>
+                    <TableCell>
+                      <div className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-xs font-semibold text-slate-700 dark:text-slate-200">
+                        <Clock className="h-3 w-3" />
+                        {formatWatchTime(totalWatchSeconds(traineeProg))}
+                      </div>
                     </TableCell>
                     <TableCell>
                       <Select

@@ -3,6 +3,7 @@ import { AppShell } from "@/components/AppShell";
 import { useLessons, groupByModule, type Lesson } from "@/lib/modules";
 import { useRole, useTrainees, type Trainee } from "@/lib/trainees";
 import { useProgress, isLessonComplete } from "@/lib/progress";
+import { getCurrentTraineeId } from "@/lib/auth";
 import { Badge } from "@/components/ui/badge";
 import { LessonDialog } from "@/components/LessonDialog";
 import {
@@ -48,8 +49,8 @@ export function ModulesView() {
   const [role] = useRole();
   const { trainees } = useTrainees();
   const { lessons, sync, syncing, syncedAt } = useLessons();
-  const { progress, setLesson } = useProgress();
-  const [traineeId, setTraineeId] = useState<string>("none");
+  const { progress, setLesson, addWatchSeconds } = useProgress();
+  const loggedInId = getCurrentTraineeId();
   const [active, setActive] = useState<Lesson | null>(null);
   const [expandedModules, setExpandedModules] = useState<Set<number>>(
     new Set([1])
@@ -57,7 +58,7 @@ export function ModulesView() {
 
   const groups = useMemo(() => groupByModule(lessons), [lessons]);
   const trainee: Trainee | null =
-    trainees.find((t) => t.id === traineeId) ?? null;
+    (loggedInId ? trainees.find((t) => t.id === loggedInId) : null) ?? null;
   const tp = trainee ? progress[trainee.id] : undefined;
   const readOnly = role === "management" || !trainee;
 
@@ -376,6 +377,10 @@ export function ModulesView() {
         onToggleAssignment={() => {
           if (!active || !trainee) return;
           setLesson(trainee.id, active.id, { assignmentDone: !tp?.[active.id]?.assignmentDone });
+        }}
+        onTick={(secs) => {
+          if (!active || !trainee) return;
+          addWatchSeconds(trainee.id, active.id, secs);
         }}
       />
     </AppShell>

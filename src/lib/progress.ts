@@ -5,6 +5,7 @@ export type LessonProgress = {
   watched: boolean;
   assignmentDone: boolean;
   completedAt?: string;
+  watchSeconds?: number;
 };
 
 export type ProgressMap = Record<string, Record<string, LessonProgress>>;
@@ -68,6 +69,19 @@ export function useProgress() {
     [persist],
   );
 
+  const addWatchSeconds = useCallback(
+    (traineeId: string, lessonId: string, secs: number) => {
+      if (!traineeId || !lessonId || secs <= 0) return;
+      persist((p) => {
+        const tp = { ...(p[traineeId] || {}) };
+        const cur = tp[lessonId] || { watched: false, assignmentDone: false };
+        tp[lessonId] = { ...cur, watchSeconds: (cur.watchSeconds || 0) + secs };
+        return { ...p, [traineeId]: tp };
+      });
+    },
+    [persist],
+  );
+
   const resetTrainee = useCallback(
     (traineeId: string) => {
       persist((p) => {
@@ -79,5 +93,18 @@ export function useProgress() {
     [persist],
   );
 
-  return { progress, hydrated, setLesson, resetTrainee };
+  return { progress, hydrated, setLesson, addWatchSeconds, resetTrainee };
+}
+
+export function totalWatchSeconds(traineeProg?: Record<string, LessonProgress>) {
+  if (!traineeProg) return 0;
+  return Object.values(traineeProg).reduce((sum, p) => sum + (p.watchSeconds || 0), 0);
+}
+
+export function formatWatchTime(seconds: number) {
+  if (seconds < 60) return `${seconds}s`;
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  if (h === 0) return `${m}m`;
+  return `${h}h ${m}m`;
 }

@@ -18,7 +18,15 @@ import { toast } from "sonner";
 export function AddTraineeDialog({
   onAdd,
 }: {
-  onAdd: (input: { name: string; phone: string; joinDate: string; manager: string; notes?: string }) => void;
+  onAdd: (input: {
+    name: string;
+    phone: string;
+    joinDate: string;
+    manager: string;
+    notes?: string;
+    username?: string;
+    password?: string;
+  }) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
@@ -26,6 +34,8 @@ export function AddTraineeDialog({
   const [joinDate, setJoinDate] = useState(todayISO());
   const [manager, setManager] = useState("");
   const [notes, setNotes] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
 
   function reset() {
     setName("");
@@ -33,6 +43,8 @@ export function AddTraineeDialog({
     setJoinDate(todayISO());
     setManager("");
     setNotes("");
+    setUsername("");
+    setPassword("");
   }
 
   function submit() {
@@ -40,7 +52,11 @@ export function AddTraineeDialog({
       toast.error("Name is required");
       return;
     }
-    onAdd({ name, phone, joinDate, manager, notes });
+    if (username.trim() && password.length < 4) {
+      toast.error("Password must be at least 4 characters");
+      return;
+    }
+    onAdd({ name, phone, joinDate, manager, notes, username, password });
     toast.success(`${name} added at Level 0`);
     reset();
     setOpen(false);
@@ -53,7 +69,7 @@ export function AddTraineeDialog({
           <Plus className="mr-1 h-4 w-4" /> Add Trainee
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add new trainee</DialogTitle>
         </DialogHeader>
@@ -79,6 +95,37 @@ export function AddTraineeDialog({
             <Label htmlFor="mgr">Assigned manager / team</Label>
             <Input id="mgr" value={manager} onChange={(e) => setManager(e.target.value)} />
           </div>
+
+          <div className="mt-2 rounded-md border bg-muted/30 p-3 space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Trainee portal credentials
+            </p>
+            <div className="grid gap-1.5">
+              <Label htmlFor="username">Username</Label>
+              <Input
+                id="username"
+                placeholder="e.g. ravi.k"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                autoComplete="off"
+              />
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="text"
+                placeholder="At least 4 characters"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="new-password"
+              />
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Trainee uses these to sign in to the trainee portal. Leave blank to skip.
+            </p>
+          </div>
+
           <div className="grid gap-1.5">
             <Label htmlFor="notes">Notes (optional)</Label>
             <Textarea id="notes" rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} />
