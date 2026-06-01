@@ -1,10 +1,11 @@
+import { useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, ExternalLink, FileText } from "lucide-react";
+import { Check, ExternalLink, FileText, Clock } from "lucide-react";
 import type { Lesson } from "@/lib/modules";
 import { driveEmbed } from "@/lib/modules";
-import type { LessonProgress } from "@/lib/progress";
+import { formatWatchTime, type LessonProgress } from "@/lib/progress";
 import type { Trainee } from "@/lib/trainees";
 
 export function LessonDialog({
@@ -15,6 +16,7 @@ export function LessonDialog({
   onClose,
   onToggleWatched,
   onToggleAssignment,
+  onTick,
 }: {
   lesson: Lesson | null;
   trainee?: Trainee | null;
@@ -23,7 +25,29 @@ export function LessonDialog({
   onClose: () => void;
   onToggleWatched?: () => void;
   onToggleAssignment?: () => void;
+  /** Called every second while the dialog is open with a trainee, to count watch time. */
+  onTick?: (seconds: number) => void;
 }) {
+  // Tick once per second while the lesson dialog is open + has trainee + not read-only.
+  const activeRef = useRef(false);
+  activeRef.current = !!(lesson && trainee && !readOnly && onTick);
+
+  useEffect(() => {
+    if (!lesson || !trainee || readOnly || !onTick) return;
+    let lastVisibleTs = Date.now();
+    const interval = window.setInterval(() => {
+      if (document.visibilityState !== "visible") {
+        lastVisibleTs = Date.now();
+        return;
+      }
+      const now = Date.now();
+      const delta = Math.min(5, Math.round((now - lastVisibleTs) / 1000));
+      lastVisibleTs = now;
+      if (delta > 0) onTick(delta);
+    }, 1000);
+    return () => window.clearInterval(interval);
+  }, [lesson?.id, trainee?.id, readOnly, onTick]);
+
   return (
     <Dialog open={!!lesson} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-3xl">
@@ -36,7 +60,13 @@ export function LessonDialog({
               </div>
               <DialogTitle className="mt-2 text-base sm:text-lg">{lesson.lessonName}</DialogTitle>
               {trainee && (
-                <p className="text-xs text-muted-foreground">Tracking for {trainee.name}</p>
+                <p className="text-xs text-muted-foreground flex items-center gap-3">
+                  <span>Tracking for {trainee.name}</span>
+                  <span className="inline-flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    {formatWatchTime(progress?.watchSeconds ?? 0)} watched
+                  </span>
+                </p>
               )}
             </DialogHeader>
             <div className="aspect-video w-full overflow-hidden rounded-md border bg-muted">
