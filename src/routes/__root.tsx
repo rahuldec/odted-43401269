@@ -117,6 +117,18 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const router = useRouter();
+
+  useEffect(() => {
+    // Initial hydrate of cached role from current session
+    void hydrateRoleFromSession();
+    const { data: sub } = supabase.auth.onAuthStateChange(async () => {
+      await hydrateRoleFromSession();
+      queryClient.invalidateQueries();
+      router.invalidate();
+    });
+    return () => sub.subscription.unsubscribe();
+  }, [queryClient, router]);
 
   return (
     <QueryClientProvider client={queryClient}>
