@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       lesson_progress: {
         Row: {
+          assignment_done: boolean
           completed_at: string | null
           id: string
           lesson_id: string
@@ -25,6 +26,7 @@ export type Database = {
           watched: boolean
         }
         Insert: {
+          assignment_done?: boolean
           completed_at?: string | null
           id?: string
           lesson_id: string
@@ -34,6 +36,7 @@ export type Database = {
           watched?: boolean
         }
         Update: {
+          assignment_done?: boolean
           completed_at?: string | null
           id?: string
           lesson_id?: string
