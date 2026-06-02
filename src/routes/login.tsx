@@ -10,7 +10,7 @@ import {
   loginAsTraineeWithCredentials,
   getAuthRole,
 } from "@/lib/auth";
-import { useTrainees } from "@/lib/trainees";
+
 import logoUrl from "@/assets/okie-dokie-logo.png";
 import { Lock, GraduationCap, ShieldCheck, ArrowLeft, User } from "lucide-react";
 
