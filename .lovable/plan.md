@@ -1,81 +1,68 @@
 ## Goal
 
-Add a full Level-0 video training system to the Okie Dokie tracker. Sync 35 lessons live from your Google Sheet, let HR assign and track per-trainee progress, surface analytics/reports/certificates in a new sidebar, and block Level 0 → Level 1 promotion until every video is completed.
+Move trainee accounts off `localStorage` so a trainee can log in from any device with the credentials HR sets for them. Keep admin/HR login simple (still the `admin / rahul-ranger` hardcoded login for now).
 
-## New navigation
+## What changes
 
-Convert the current top header into a collapsible left sidebar (keeps the existing HR/Management toggle in the header strip). Sidebar items:
+### 1. Database (Lovable Cloud)
 
-- Dashboard (existing trainees board/table)
-- Training Modules — browse all 11 modules / 35 lessons from the sheet
-- Progress Tracker — per-trainee checklist of videos + assignment links
-- Analytics — completion rates per module, per trainee, per manager
-- Reports — exportable CSV of progress
-- Certificates — auto-generated "Level 0 Complete" certificate (printable) when a trainee finishes 100%
-- Level Reference (existing)
+Create three tables:
 
-## Module data — live from Google Sheet
+- **`trainees`** — name, phone, join_date, exit_date, current_level, level_since_date, manager, status, notes, history (jsonb), `auth_user_id` (uuid → auth.users), timestamps. Holds everything currently in the `Trainee` type *except* username/password.
+- **`lesson_progress`** — `(trainee_id, lesson_id)` unique, `watched` bool, `watch_seconds` int, `completed_at` timestamp. Replaces the per-browser `odk-progress` localStorage object.
+- **`user_roles`** — `(user_id, role)` with enum `app_role = 'admin' | 'trainee'` and a `has_role()` security-definer function. Standard Lovable pattern; lets us mark which Supabase users are HR.
 
-Fetch `https://docs.google.com/spreadsheets/d/1gWH0Gi6aG0MdMcNA-ieJX4vlOJD6s1HfKSEFo6I92ig/export?format=csv` on app load, parse, cache in localStorage with a 15‑minute TTL, and expose a "Sync now" button. Parsed shape per lesson:
+RLS policies:
+- Trainees: only HR/admins can insert/update/delete; a trainee can `SELECT` their own row.
+- lesson_progress: a trainee can read/write only their own rows (`trainee_id` joined back via `auth_user_id = auth.uid()`); HR can read everyone's.
+- user_roles: readable by the user themselves and by admins; writable only by admins.
 
-```text
-{ id, moduleNo, moduleName, lessonName, videoUrl, assignmentUrl?, level: 0 }
-```
+### 2. Trainee account creation
 
-The sheet's merged "Module" cells are handled by carrying forward the last non-empty module name. Drive `…/file/d/<ID>/view` links are auto-converted to `…/preview` for inline embedding.
+When HR adds a trainee with a username + password, the "Add Trainee" flow:
+1. Calls a `createServerFn` (admin-only) that uses `supabaseAdmin.auth.admin.createUser` with `email = <username>@trainee.local`, the chosen password, and `email_confirm: true` (no email verification needed).
+2. Inserts the `trainees` row with `auth_user_id` = the new user's id.
+3. Inserts a `user_roles` row with role `trainee`.
 
-11 modules detected: Basics, SIS, Academic, Examination, Fee, PDF Template, Attendance, Library, Institute Diary, Zoho Forms, Communication.
+Editing a trainee's password calls another server fn that uses `supabaseAdmin.auth.admin.updateUserById`.
 
-## Progress tracking
+### 3. Login flow
 
-Per-trainee progress stored in localStorage under `odk-progress`:
+- Trainee login form: take username + password, call `supabase.auth.signInWithPassword({ email: \`${username}@trainee.local\`, password })`. On success, navigate to `/modules`.
+- Admin login: unchanged (still local, still `admin / rahul-ranger`) — HR isn't being migrated in this pass.
 
-```text
-{ [traineeId]: { [lessonId]: { watched: bool, assignmentDone: bool, completedAt } } }
-```
+### 4. App data hooks
 
-A lesson counts as "complete" when watched is true AND (no assignment OR assignment marked done). Promotion rule wired into `promote()` in `src/lib/trainees.ts`: if current level is 0 and completion < 100%, throw + toast "Complete all 35 modules first".
+Rewrite the data layer to read/write Supabase instead of `localStorage`:
+- `useTrainees()` → fetches `trainees` table via TanStack Query; `add`/`update`/`remove`/`promote` call server fns.
+- `useProgress()` → queries `lesson_progress` for the signed-in trainee; `toggleWatched` and `addWatchSeconds` upsert rows.
+- `getCurrentTraineeId()` → looks up the row where `auth_user_id = auth.uid()`.
 
-## Pages
+Watch-time tracking continues to tick every second; it just upserts `watch_seconds` to the DB (debounced — flush every 10 s and on dialog close to avoid hammering the API).
 
-**Training Modules** — accordion of 11 modules → list of lessons. Click a lesson opens a dialog with embedded Drive video iframe + "Mark watched", and assignment download link + "Mark assignment done" when present. Management view = read-only.
+### 5. One-time migration of existing local data
 
-**Progress Tracker** — trainee picker (or all). For each trainee shows progress bar, module-level breakdown, list of pending lessons. HR can tick items on behalf of a trainee.
+Add a small "Import local data → Cloud" button on the HR dashboard (visible only to admins) that reads the existing `odk-trainees` and `odk-progress` keys from localStorage and posts them to a server fn that recreates the trainees + their progress in Cloud. After the user clicks it once, they can clear it.
 
-**Analytics** — three Recharts cards: avg completion by module (bar), trainees by completion bucket 0/25/50/75/100% (bar), top managers by team completion (bar). Uses the existing chart tokens.
+## What I'm NOT doing in this pass
 
-**Reports** — table of every trainee × overall % + per-module %, "Download CSV" button.
+- HR/admin accounts stay on the local `admin / rahul-ranger` check.
+- No password reset emails, no "forgot password", no email verification.
+- Certificates / analytics pages keep reading from the same trainees/progress hooks, so they continue to work unchanged once the hooks are swapped.
 
-**Certificates** — auto-list of trainees at 100% Level-0 completion; printable certificate page styled with corporate header, trainee name, completion date, signature line.
+## Files touched (high-level)
 
-## Design
+- New migration creating the 3 tables + RLS + `has_role`.
+- New `src/lib/trainees.functions.ts`, `src/lib/progress.functions.ts`, `src/lib/admin-trainees.functions.ts` (the last one uses `supabaseAdmin`).
+- Rewrite `src/lib/trainees.ts` and `src/lib/progress.ts` hook bodies.
+- Update `src/lib/auth.ts` to delegate to `supabase.auth` for trainees.
+- Update `src/routes/login.tsx` (trainee submit calls Supabase).
+- Update `src/components/AddTraineeDialog.tsx` + `EditTraineeDialog.tsx` to pass username/password through the new server fn.
+- Update `src/start.ts` to register `attachSupabaseAuth`.
+- New "Import local data" button in `HRTable.tsx`.
 
-Keeps current color tokens, level colors, card style, Inter typography. Sidebar uses the shadcn `Sidebar` component in `collapsible="icon"` mode so the page still works on the 698px viewport.
+## Quick confirm before I build
 
-## Files
-
-New:
-- `src/components/AppSidebar.tsx`
-- `src/lib/modules.ts` (CSV fetch + parse + cache)
-- `src/lib/progress.ts` (progress hook + completion math + promotion guard helper)
-- `src/components/LessonDialog.tsx`
-- `src/components/TraineePicker.tsx`
-- `src/components/CertificateCard.tsx`
-- `src/routes/modules.tsx`
-- `src/routes/progress.tsx`
-- `src/routes/analytics.tsx`
-- `src/routes/reports.tsx`
-- `src/routes/certificates.tsx`
-
-Edited:
-- `src/routes/__root.tsx` — wrap in `SidebarProvider` + `AppSidebar`
-- `src/lib/trainees.ts` — promotion gate from Level 0
-- `src/components/AppHeader.tsx` — slim header keeping role toggle + `SidebarTrigger`
-
-## Out of scope
-
-- No backend / auth (still localStorage, single browser)
-- No video upload — links are read from the sheet as-is
-- Sheet must remain "Anyone with the link → Viewer" for CSV export to work; if it goes private the sync stops and the app falls back to the last cached copy
-
-Approve and I'll build it.
+1. **Username format** — OK to internally map `username` → `username@trainee.local` so we can reuse Supabase email/password auth? (Trainees never see this; they still type just their username.)
+2. **HR/admin accounts** — leave as the current hardcoded `admin / rahul-ranger`, or also move HR to real Supabase accounts? (I'd recommend leaving it for now and doing HR in a follow-up.)
+3. **Existing local data** — do you want the one-click "Import local data → Cloud" button, or are the trainees currently in localStorage disposable test data we can ignore?

@@ -14,16 +14,134 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      lesson_progress: {
+        Row: {
+          completed_at: string | null
+          id: string
+          lesson_id: string
+          trainee_id: string
+          updated_at: string
+          watch_seconds: number
+          watched: boolean
+        }
+        Insert: {
+          completed_at?: string | null
+          id?: string
+          lesson_id: string
+          trainee_id: string
+          updated_at?: string
+          watch_seconds?: number
+          watched?: boolean
+        }
+        Update: {
+          completed_at?: string | null
+          id?: string
+          lesson_id?: string
+          trainee_id?: string
+          updated_at?: string
+          watch_seconds?: number
+          watched?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_progress_trainee_id_fkey"
+            columns: ["trainee_id"]
+            isOneToOne: false
+            referencedRelation: "trainees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trainees: {
+        Row: {
+          auth_user_id: string | null
+          created_at: string
+          current_level: number
+          exit_date: string | null
+          history: Json
+          id: string
+          join_date: string
+          level_since_date: string
+          manager: string
+          name: string
+          notes: string
+          phone: string
+          status: string
+          updated_at: string
+          username: string | null
+        }
+        Insert: {
+          auth_user_id?: string | null
+          created_at?: string
+          current_level?: number
+          exit_date?: string | null
+          history?: Json
+          id?: string
+          join_date: string
+          level_since_date: string
+          manager?: string
+          name: string
+          notes?: string
+          phone?: string
+          status?: string
+          updated_at?: string
+          username?: string | null
+        }
+        Update: {
+          auth_user_id?: string | null
+          created_at?: string
+          current_level?: number
+          exit_date?: string | null
+          history?: Json
+          id?: string
+          join_date?: string
+          level_since_date?: string
+          manager?: string
+          name?: string
+          notes?: string
+          phone?: string
+          status?: string
+          updated_at?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "trainee"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +268,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "trainee"],
+    },
   },
 } as const
