@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import type { Lesson } from "./modules";
 
 export type LessonProgress = {
@@ -9,21 +10,6 @@ export type LessonProgress = {
 };
 
 export type ProgressMap = Record<string, Record<string, LessonProgress>>;
-
-const KEY = "odk-progress";
-
-function load(): ProgressMap {
-  if (typeof window === "undefined") return {};
-  try {
-    const raw = window.localStorage.getItem(KEY);
-    return raw ? (JSON.parse(raw) as ProgressMap) : {};
-  } catch { return {}; }
-}
-
-function save(p: ProgressMap) {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(KEY, JSON.stringify(p));
-}
 
 export function isLessonComplete(lesson: Lesson, p?: LessonProgress) {
   if (!p) return false;
@@ -38,60 +24,111 @@ export function completionFor(lessons: Lesson[], traineeProg?: Record<string, Le
   return { done, total: lessons.length, pct: Math.round((done / lessons.length) * 100) };
 }
 
+function rowsToMap(rows: Array<Record<string, unknown>>): ProgressMap {
+  const map: ProgressMap = {};
+  for (const row of rows) {
+    const tid = row.trainee_id as string;
+    const lid = row.lesson_id as string;
+    (map[tid] ||= {})[lid] = {
+      watched: !!row.watched,
+      assignmentDone: !!row.assignment_done,
+      completedAt: (row.completed_at as string | null) || undefined,
+      watchSeconds: (row.watch_seconds as number) || 0,
+    };
+  }
+  return map;
+}
+
 export function useProgress() {
   const [progress, setProgress] = useState<ProgressMap>({});
   const [hydrated, setHydrated] = useState(false);
+  const progressRef = useRef<ProgressMap>({});
+  progressRef.current = progress;
 
-  useEffect(() => {
-    setProgress(load());
+  const refetch = useCallback(async () => {
+    const { data, error } = await supabase.from("lesson_progress").select("*");
+    if (error) {
+      console.error("fetch progress failed", error);
+      setProgress({});
+    } else {
+      setProgress(rowsToMap((data || []) as Array<Record<string, unknown>>));
+    }
     setHydrated(true);
   }, []);
 
-  const persist = useCallback((updater: (p: ProgressMap) => ProgressMap) => {
-    setProgress((prev) => {
-      const next = updater(prev);
-      save(next);
-      return next;
-    });
+  useEffect(() => {
+    refetch();
+    const { data: sub } = supabase.auth.onAuthStateChange(() => refetch());
+    return () => sub.subscription.unsubscribe();
+  }, [refetch]);
+
+  const writeRow = useCallback(async (traineeId: string, lessonId: string, merged: LessonProgress) => {
+    const { error } = await supabase
+      .from("lesson_progress")
+      .upsert(
+        {
+          trainee_id: traineeId,
+          lesson_id: lessonId,
+          watched: !!merged.watched,
+          assignment_done: !!merged.assignmentDone,
+          watch_seconds: merged.watchSeconds ?? 0,
+          completed_at: merged.completedAt ?? null,
+        },
+        { onConflict: "trainee_id,lesson_id" },
+      );
+    if (error) console.error("upsert progress failed", error);
   }, []);
 
   const setLesson = useCallback(
     (traineeId: string, lessonId: string, patch: Partial<LessonProgress>) => {
-      persist((p) => {
+      const cur = progressRef.current[traineeId]?.[lessonId] || {
+        watched: false,
+        assignmentDone: false,
+        watchSeconds: 0,
+      };
+      const next: LessonProgress = { ...cur, ...patch };
+      if (next.watched && !cur.completedAt) next.completedAt = new Date().toISOString();
+      setProgress((p) => {
         const tp = { ...(p[traineeId] || {}) };
-        const cur = tp[lessonId] || { watched: false, assignmentDone: false };
-        const next = { ...cur, ...patch };
-        if (next.watched && !cur.completedAt) next.completedAt = new Date().toISOString();
         tp[lessonId] = next;
         return { ...p, [traineeId]: tp };
       });
+      void writeRow(traineeId, lessonId, next);
     },
-    [persist],
+    [writeRow],
   );
 
   const addWatchSeconds = useCallback(
     (traineeId: string, lessonId: string, secs: number) => {
       if (!traineeId || !lessonId || secs <= 0) return;
-      persist((p) => {
+      const cur = progressRef.current[traineeId]?.[lessonId] || {
+        watched: false,
+        assignmentDone: false,
+        watchSeconds: 0,
+      };
+      const next: LessonProgress = { ...cur, watchSeconds: (cur.watchSeconds || 0) + secs };
+      setProgress((p) => {
         const tp = { ...(p[traineeId] || {}) };
-        const cur = tp[lessonId] || { watched: false, assignmentDone: false };
-        tp[lessonId] = { ...cur, watchSeconds: (cur.watchSeconds || 0) + secs };
+        tp[lessonId] = next;
         return { ...p, [traineeId]: tp };
       });
+      void writeRow(traineeId, lessonId, next);
     },
-    [persist],
+    [writeRow],
   );
 
-  const resetTrainee = useCallback(
-    (traineeId: string) => {
-      persist((p) => {
-        const next = { ...p };
-        delete next[traineeId];
-        return next;
-      });
-    },
-    [persist],
-  );
+  const resetTrainee = useCallback(async (traineeId: string) => {
+    setProgress((p) => {
+      const next = { ...p };
+      delete next[traineeId];
+      return next;
+    });
+    const { error } = await supabase
+      .from("lesson_progress")
+      .delete()
+      .eq("trainee_id", traineeId);
+    if (error) console.error("reset progress failed", error);
+  }, []);
 
   return { progress, hydrated, setLesson, addWatchSeconds, resetTrainee };
 }

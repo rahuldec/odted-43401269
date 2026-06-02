@@ -1,4 +1,12 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  createTraineeFn,
+  updateTraineeFn,
+  deleteTraineeFn,
+  promoteTraineeFn,
+} from "./admin-trainees.functions";
 
 export type Level = 0 | 1 | 2 | 3;
 export type Status = "Active" | "On Hold" | "Exited";
@@ -8,18 +16,17 @@ export type Trainee = {
   name: string;
   phone: string;
   joinDate: string;
-  exitDate?: string;        // set automatically when status → "Exited"
+  exitDate?: string;
   currentLevel: Level;
   levelSinceDate: string;
   manager: string;
   status: Status;
   notes?: string;
-  username?: string;        // trainee portal login
-  password?: string;        // trainee portal login (plain — local-only demo)
+  username?: string;
+  password?: string;
   history: { level: Level; date: string }[];
 };
 
-const TRAINEES_KEY = "odk-trainees";
 const ROLE_KEY = "odk-role";
 
 export type Role = "hr" | "management";
@@ -30,26 +37,10 @@ export const LEVEL_INFO: Record<
   Level,
   { name: string; desc: string; tokenClass: string }
 > = {
-  0: {
-    name: "Level 0",
-    desc: "Pre-onboarding, video training",
-    tokenClass: "bg-level-0 text-level-0-foreground",
-  },
-  1: {
-    name: "Level 1",
-    desc: "Ready for client calls & supporting visits",
-    tokenClass: "bg-level-1 text-level-1-foreground",
-  },
-  2: {
-    name: "Level 2",
-    desc: "Solo client visits, owns small clients",
-    tokenClass: "bg-level-2 text-level-2-foreground",
-  },
-  3: {
-    name: "Level 3",
-    desc: "Contributes to complex clients",
-    tokenClass: "bg-level-3 text-level-3-foreground",
-  },
+  0: { name: "Level 0", desc: "Pre-onboarding, video training", tokenClass: "bg-level-0 text-level-0-foreground" },
+  1: { name: "Level 1", desc: "Ready for client calls & supporting visits", tokenClass: "bg-level-1 text-level-1-foreground" },
+  2: { name: "Level 2", desc: "Solo client visits, owns small clients", tokenClass: "bg-level-2 text-level-2-foreground" },
+  3: { name: "Level 3", desc: "Contributes to complex clients", tokenClass: "bg-level-3 text-level-3-foreground" },
 };
 
 export function todayISO() {
@@ -66,108 +57,112 @@ export function nextLevel(level: Level): Level | null {
   return level < 3 ? ((level + 1) as Level) : null;
 }
 
-function uid() {
-  return Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
-}
-
-function load(): Trainee[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = window.localStorage.getItem(TRAINEES_KEY);
-    if (!raw) return [];
-    return JSON.parse(raw) as Trainee[];
-  } catch {
-    return [];
-  }
-}
-
-function save(list: Trainee[]) {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(TRAINEES_KEY, JSON.stringify(list));
+function rowToTrainee(r: Record<string, unknown>): Trainee {
+  return {
+    id: r.id as string,
+    name: r.name as string,
+    phone: (r.phone as string) || "",
+    joinDate: r.join_date as string,
+    exitDate: (r.exit_date as string | null) || undefined,
+    currentLevel: (r.current_level as Level) ?? 0,
+    levelSinceDate: r.level_since_date as string,
+    manager: (r.manager as string) || "",
+    status: (r.status as Status) || "Active",
+    notes: (r.notes as string) || "",
+    username: (r.username as string | null) || "",
+    history: ((r.history as { level: Level; date: string }[]) ?? []),
+  };
 }
 
 export function useTrainees() {
   const [trainees, setTrainees] = useState<Trainee[]>([]);
   const [hydrated, setHydrated] = useState(false);
+  const createSrv = useServerFn(createTraineeFn);
+  const updateSrv = useServerFn(updateTraineeFn);
+  const deleteSrv = useServerFn(deleteTraineeFn);
+  const promoteSrv = useServerFn(promoteTraineeFn);
 
-  useEffect(() => {
-    setTrainees(load());
+  const refetch = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("trainees")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) {
+      console.error("fetch trainees failed", error);
+      setTrainees([]);
+    } else {
+      setTrainees((data || []).map((r) => rowToTrainee(r as Record<string, unknown>)));
+    }
     setHydrated(true);
   }, []);
 
-  const persist = useCallback((updater: (prev: Trainee[]) => Trainee[]) => {
-    setTrainees((prev) => {
-      const next = updater(prev);
-      save(next);
-      return next;
+  useEffect(() => {
+    refetch();
+    const { data: sub } = supabase.auth.onAuthStateChange(() => {
+      refetch();
     });
-  }, []);
+    return () => sub.subscription.unsubscribe();
+  }, [refetch]);
 
   const add = useCallback(
-    (input: { name: string; phone: string; joinDate: string; manager: string; notes?: string; username?: string; password?: string }) => {
-      const t: Trainee = {
-        id: uid(),
-        name: input.name.trim(),
-        phone: input.phone.trim(),
-        joinDate: input.joinDate,
-        currentLevel: 0,
-        levelSinceDate: input.joinDate,
-        manager: input.manager.trim(),
-        status: "Active",
-        notes: input.notes?.trim() || "",
-        username: input.username?.trim() || "",
-        password: input.password || "",
-        history: [{ level: 0, date: input.joinDate }],
-      };
-      persist((p) => [t, ...p]);
+    async (input: {
+      name: string;
+      phone: string;
+      joinDate: string;
+      manager: string;
+      notes?: string;
+      username?: string;
+      password?: string;
+    }) => {
+      await createSrv({
+        data: {
+          name: input.name,
+          phone: input.phone || "",
+          joinDate: input.joinDate,
+          manager: input.manager || "",
+          notes: input.notes || "",
+          username: input.username || undefined,
+          password: input.password || undefined,
+        },
+      });
+      await refetch();
     },
-    [persist],
+    [createSrv, refetch],
   );
 
   const update = useCallback(
-    (id: string, patch: Partial<Trainee>) => {
-      persist((p) =>
-        p.map((t) => {
-          if (t.id !== id) return t;
-          const updated = { ...t, ...patch };
-          // Auto-set exitDate when status changes to Exited
-          if (patch.status === "Exited" && !t.exitDate) {
-            updated.exitDate = todayISO();
-          }
-          // Clear exitDate if status changes away from Exited
-          if (patch.status && patch.status !== "Exited") {
-            updated.exitDate = undefined;
-          }
-          return updated;
-        })
-      );
+    async (id: string, patch: Partial<Trainee>) => {
+      const srvPatch: Record<string, unknown> = {};
+      if (patch.name !== undefined) srvPatch.name = patch.name;
+      if (patch.phone !== undefined) srvPatch.phone = patch.phone;
+      if (patch.joinDate !== undefined) srvPatch.joinDate = patch.joinDate;
+      if (patch.levelSinceDate !== undefined) srvPatch.levelSinceDate = patch.levelSinceDate;
+      if (patch.currentLevel !== undefined) srvPatch.currentLevel = patch.currentLevel;
+      if (patch.manager !== undefined) srvPatch.manager = patch.manager;
+      if (patch.status !== undefined) srvPatch.status = patch.status;
+      if (patch.notes !== undefined) srvPatch.notes = patch.notes;
+      if (patch.username !== undefined) srvPatch.username = patch.username;
+      if (patch.password !== undefined && patch.password) srvPatch.password = patch.password;
+      await updateSrv({ data: { id, patch: srvPatch as Parameters<typeof updateSrv>[0]["data"]["patch"] } });
+      await refetch();
     },
-    [persist],
+    [updateSrv, refetch],
   );
 
   const remove = useCallback(
-    (id: string) => persist((p) => p.filter((t) => t.id !== id)),
-    [persist],
+    async (id: string) => {
+      await deleteSrv({ data: { id } });
+      await refetch();
+    },
+    [deleteSrv, refetch],
   );
 
   const promote = useCallback(
-    (id: string) => {
-      persist((p) =>
-        p.map((t) => {
-          if (t.id !== id) return t;
-          const nl = nextLevel(t.currentLevel);
-          if (nl === null) return t;
-          const date = todayISO();
-          return {
-            ...t,
-            currentLevel: nl,
-            levelSinceDate: date,
-            history: [...t.history, { level: nl, date }],
-          };
-        }),
-      );
+    async (id: string) => {
+      await promoteSrv({ data: { id } });
+      await refetch();
     },
-    [persist],
+    [promoteSrv, refetch],
   );
 
   return { trainees, hydrated, add, update, remove, promote };
