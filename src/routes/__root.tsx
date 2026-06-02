@@ -7,6 +7,9 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { hydrateRoleFromSession } from "@/lib/auth";
 
 import appCss from "../styles.css?url";
 
