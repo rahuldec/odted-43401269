@@ -39,7 +39,7 @@ export const Route = createFileRoute("/login")({
 function LoginPage() {
   const navigate = useNavigate();
   const search = useSearch({ from: "/login" });
-  const { trainees } = useTrainees();
+  const { trainees, hydrated } = useTrainees();
   const [view, setView] = useState<"select" | "admin-login" | "trainee-login">("select");
 
   // Form states
@@ -49,6 +49,10 @@ function LoginPage() {
 
   const handleTraineeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!hydrated) {
+      toast.error("Still loading — please try again in a moment");
+      return;
+    }
     setIsLoading(true);
     setTimeout(() => {
       const t = loginAsTraineeWithCredentials(username, password, trainees);
@@ -56,6 +60,13 @@ function LoginPage() {
       if (t) {
         toast.success(`Welcome, ${t.name}`);
         navigate({ to: "/modules" });
+        return;
+      }
+      const withCreds = trainees.filter((x) => (x.username || "").trim()).length;
+      if (trainees.length === 0) {
+        toast.error("No trainees exist on this device. Ask HR to add you here, or enable Lovable Cloud for shared accounts.");
+      } else if (withCreds === 0) {
+        toast.error("No trainee has login credentials set. Ask HR to set a username & password on your profile.");
       } else {
         toast.error("Invalid username or password");
       }
