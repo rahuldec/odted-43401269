@@ -152,9 +152,6 @@ export const updateTraineeFn = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
     const { id, patch } = data;
-    type TraineesUpdate = Parameters<
-      ReturnType<typeof supabaseAdmin.from<"trainees">>["update"]
-    >[0];
     const dbPatch: TraineesUpdate = {};
     if (patch.name !== undefined) dbPatch.name = patch.name;
     if (patch.phone !== undefined) dbPatch.phone = patch.phone;
