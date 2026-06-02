@@ -143,7 +143,8 @@ export function useTrainees() {
       if (patch.notes !== undefined) srvPatch.notes = patch.notes;
       if (patch.username !== undefined) srvPatch.username = patch.username;
       if (patch.password !== undefined && patch.password) srvPatch.password = patch.password;
-      await updateSrv({ data: { id, patch: srvPatch as Parameters<typeof updateSrv>[0]["data"]["patch"] } });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await updateSrv({ data: { id, patch: srvPatch as any } });
       await refetch();
     },
     [updateSrv, refetch],
