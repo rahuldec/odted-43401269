@@ -20,7 +20,15 @@ export const Route = createFileRoute("/login")({
       redirect: (search.redirect as string) || undefined,
     };
   },
-  beforeLoad: () => {
+  beforeLoad: async () => {
+    if (typeof window === "undefined") return;
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) {
+      // No active session — clear any stale cached role and show portal selection
+      localStorage.removeItem("odk-auth-role");
+      localStorage.removeItem("odk-auth-trainee-id");
+      return;
+    }
     const role = getAuthRole();
     if (role === "admin") {
       throw redirect({ to: "/dashboard" });
