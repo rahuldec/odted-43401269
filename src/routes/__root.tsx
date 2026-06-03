@@ -122,13 +122,16 @@ function RootComponent() {
   useEffect(() => {
     // Initial hydrate of cached role from current session
     void hydrateRoleFromSession();
-    const { data: sub } = supabase.auth.onAuthStateChange(async () => {
-      await hydrateRoleFromSession();
-      queryClient.invalidateQueries();
-      router.invalidate();
+    const { data: sub } = supabase.auth.onAuthStateChange(() => {
+      // Fire-and-forget — never await inside this callback (deadlocks Supabase auth)
+      void hydrateRoleFromSession().then(() => {
+        queryClient.invalidateQueries();
+        router.invalidate();
+      });
     });
     return () => sub.subscription.unsubscribe();
   }, [queryClient, router]);
+
 
   return (
     <QueryClientProvider client={queryClient}>
