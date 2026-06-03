@@ -1,6 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -10,7 +9,13 @@ type TraineesUpdate = Database["public"]["Tables"]["trainees"]["Update"];
 const ADMIN_EMAIL = "admin@odk.local";
 const TRAINEE_EMAIL_DOMAIN = "trainee.local";
 
+async function getAdmin() {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  return supabaseAdmin;
+}
+
 async function assertAdmin(userId: string) {
+  const supabaseAdmin = await getAdmin();
   const { data, error } = await supabaseAdmin
     .from("user_roles")
     .select("role")
@@ -20,6 +25,7 @@ async function assertAdmin(userId: string) {
   if (error) throw new Error(error.message);
   if (!data) throw new Error("Not authorized");
 }
+
 
 function usernameToEmail(username: string) {
   return `${username.trim().toLowerCase()}@${TRAINEE_EMAIL_DOMAIN}`;
