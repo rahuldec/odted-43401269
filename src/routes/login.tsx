@@ -10,6 +10,7 @@ import {
   loginAsTraineeWithCredentials,
   getAuthRole,
 } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
 
 import logoUrl from "@/assets/okie-dokie-logo.png";
 import { Lock, GraduationCap, ShieldCheck, ArrowLeft, User } from "lucide-react";
