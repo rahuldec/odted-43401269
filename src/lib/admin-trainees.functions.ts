@@ -1,6 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -10,7 +9,13 @@ type TraineesUpdate = Database["public"]["Tables"]["trainees"]["Update"];
 const ADMIN_EMAIL = "admin@odk.local";
 const TRAINEE_EMAIL_DOMAIN = "trainee.local";
 
+async function getAdmin() {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  return supabaseAdmin;
+}
+
 async function assertAdmin(userId: string) {
+  const supabaseAdmin = await getAdmin();
   const { data, error } = await supabaseAdmin
     .from("user_roles")
     .select("role")
@@ -20,6 +25,7 @@ async function assertAdmin(userId: string) {
   if (error) throw new Error(error.message);
   if (!data) throw new Error("Not authorized");
 }
+
 
 function usernameToEmail(username: string) {
   return `${username.trim().toLowerCase()}@${TRAINEE_EMAIL_DOMAIN}`;
@@ -39,6 +45,8 @@ export const ensureAdminUserExists = createServerFn({ method: "POST" })
     if (data.password !== expected) {
       throw new Error("Invalid admin password");
     }
+    const supabaseAdmin = await getAdmin();
+
 
     // Find existing admin user by email
     const { data: list, error: listErr } = await supabaseAdmin.auth.admin.listUsers({
@@ -87,6 +95,7 @@ export const createTraineeFn = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
+    const supabaseAdmin = await getAdmin();
 
     let authUserId: string | null = null;
     const username = data.username?.trim() || "";
@@ -151,6 +160,7 @@ export const updateTraineeFn = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
+    const supabaseAdmin = await getAdmin();
     const { id, patch } = data;
     const dbPatch: TraineesUpdate = {};
     if (patch.name !== undefined) dbPatch.name = patch.name;
@@ -231,6 +241,7 @@ export const deleteTraineeFn = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
+    const supabaseAdmin = await getAdmin();
     const { data: t } = await supabaseAdmin
       .from("trainees")
       .select("auth_user_id")
@@ -254,6 +265,7 @@ export const promoteTraineeFn = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
+    const supabaseAdmin = await getAdmin();
     const { data: t, error } = await supabaseAdmin
       .from("trainees")
       .select("current_level, history")

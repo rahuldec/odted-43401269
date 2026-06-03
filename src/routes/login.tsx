@@ -49,29 +49,42 @@ function LoginPage() {
   const handleTraineeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    const t = await loginAsTraineeWithCredentials(username, password);
-    setIsLoading(false);
-    if (t) {
-      toast.success(`Welcome, ${t.name}`);
-      navigate({ to: "/modules" });
-    } else {
-      toast.error("Invalid username or password");
+    try {
+      const t = await loginAsTraineeWithCredentials(username, password);
+      if (t) {
+        toast.success(`Welcome, ${t.name}`);
+        navigate({ to: "/modules" });
+      } else {
+        toast.error("Invalid username or password");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Login failed. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleAdminSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    const success = await loginAsAdmin(username, password);
-    setIsLoading(false);
-    if (success) {
-      toast.success("Admin access granted. Welcome back!");
-      const target = search.redirect || "/dashboard";
-      navigate({ to: target });
-    } else {
-      toast.error("Incorrect Admin ID or Password");
+    try {
+      const success = await loginAsAdmin(username, password);
+      if (success) {
+        toast.success("Admin access granted. Welcome back!");
+        const target = search.redirect || "/dashboard";
+        navigate({ to: target });
+      } else {
+        toast.error("Incorrect Admin ID or Password");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Login failed. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
+
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-background via-muted/20 to-primary/5 px-4">

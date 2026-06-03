@@ -37,32 +37,38 @@ function setRoleCache(role: AuthRole | null, traineeId: string | null) {
 
 /** Re-derive role + trainee mapping from the current Supabase session. */
 export async function hydrateRoleFromSession(): Promise<void> {
-  const { data: userData } = await supabase.auth.getUser();
-  const user = userData.user;
-  if (!user) {
-    setRoleCache(null, null);
-    return;
-  }
-  const { data: roles } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", user.id);
-  const isAdmin = (roles || []).some((r) => r.role === "admin");
-  if (isAdmin) {
-    setRoleCache("admin", null);
-    return;
-  }
-  const { data: trainee } = await supabase
-    .from("trainees")
-    .select("id")
-    .eq("auth_user_id", user.id)
-    .maybeSingle();
-  if (trainee) {
-    setRoleCache("trainee", trainee.id);
-  } else {
+  try {
+    const { data: userData } = await supabase.auth.getUser();
+    const user = userData.user;
+    if (!user) {
+      setRoleCache(null, null);
+      return;
+    }
+    const { data: roles } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id);
+    const isAdmin = (roles || []).some((r) => r.role === "admin");
+    if (isAdmin) {
+      setRoleCache("admin", null);
+      return;
+    }
+    const { data: trainee } = await supabase
+      .from("trainees")
+      .select("id")
+      .eq("auth_user_id", user.id)
+      .maybeSingle();
+    if (trainee) {
+      setRoleCache("trainee", trainee.id);
+    } else {
+      setRoleCache(null, null);
+    }
+  } catch (e) {
+    console.error("hydrateRoleFromSession failed", e);
     setRoleCache(null, null);
   }
 }
+
 
 export async function loginAsAdmin(username: string, password: string): Promise<boolean> {
   if (username.trim() !== "admin") return false;
