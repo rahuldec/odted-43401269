@@ -95,6 +95,7 @@ export const createTraineeFn = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
+    const supabaseAdmin = await getAdmin();
 
     let authUserId: string | null = null;
     const username = data.username?.trim() || "";
@@ -159,6 +160,7 @@ export const updateTraineeFn = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
+    const supabaseAdmin = await getAdmin();
     const { id, patch } = data;
     const dbPatch: TraineesUpdate = {};
     if (patch.name !== undefined) dbPatch.name = patch.name;
@@ -239,6 +241,7 @@ export const deleteTraineeFn = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
+    const supabaseAdmin = await getAdmin();
     const { data: t } = await supabaseAdmin
       .from("trainees")
       .select("auth_user_id")
@@ -262,6 +265,7 @@ export const promoteTraineeFn = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
+    const supabaseAdmin = await getAdmin();
     const { data: t, error } = await supabaseAdmin
       .from("trainees")
       .select("current_level, history")
