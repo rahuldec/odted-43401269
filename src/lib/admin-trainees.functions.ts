@@ -45,6 +45,8 @@ export const ensureAdminUserExists = createServerFn({ method: "POST" })
     if (data.password !== expected) {
       throw new Error("Invalid admin password");
     }
+    const supabaseAdmin = await getAdmin();
+
 
     // Find existing admin user by email
     const { data: list, error: listErr } = await supabaseAdmin.auth.admin.listUsers({
