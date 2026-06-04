@@ -19,10 +19,17 @@ export const Route = createFileRoute("/login")({
   validateSearch: (search: Record<string, unknown>) => {
     return {
       redirect: (search.redirect as string) || undefined,
+      resetSession: search.resetSession === "1" ? "1" : undefined,
     };
   },
-  beforeLoad: async () => {
+  beforeLoad: async ({ search }) => {
     if (typeof window === "undefined") return;
+    if (search.resetSession === "1") {
+      await supabase.auth.signOut();
+      localStorage.removeItem("odk-auth-role");
+      localStorage.removeItem("odk-auth-trainee-id");
+      return;
+    }
     const { data } = await supabase.auth.getSession();
     if (!data.session) {
       // No active session — clear any stale cached role and show portal selection
