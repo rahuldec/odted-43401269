@@ -106,8 +106,22 @@ export const createTraineeFn = createServerFn({ method: "POST" })
         password: data.password,
         email_confirm: true,
       });
-      if (error) throw new Error(error.message);
-      authUserId = created.user!.id;
+      if (error) {
+        // If user already exists, look it up and reset password so login works.
+        const { data: list, error: listErr } = await supabaseAdmin.auth.admin.listUsers({
+          page: 1,
+          perPage: 1000,
+        });
+        if (listErr) throw new Error(error.message);
+        const existing = list.users.find((u) => u.email === email);
+        if (!existing) throw new Error(error.message);
+        authUserId = existing.id;
+        await supabaseAdmin.auth.admin.updateUserById(existing.id, {
+          password: data.password,
+        });
+      } else {
+        authUserId = created.user!.id;
+      }
       await supabaseAdmin
         .from("user_roles")
         .upsert(

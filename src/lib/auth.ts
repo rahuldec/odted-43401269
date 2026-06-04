@@ -94,19 +94,33 @@ export async function loginAsTraineeWithCredentials(
   username: string,
   password: string,
 ): Promise<{ id: string; name: string } | null> {
+  // Clear stale cached role before attempting a new login.
+  setRoleCache(null, null);
   const email = usernameToEmail(username);
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
   });
-  if (error || !data.user) return null;
-  await hydrateRoleFromSession();
+  if (error || !data.user) {
+    console.error("trainee signIn failed", error);
+    return null;
+  }
   const { data: t } = await supabase
     .from("trainees")
-    .select("id, name")
+    .select("id, name, status")
     .eq("auth_user_id", data.user.id)
     .maybeSingle();
-  return t ?? null;
+  if (!t) {
+    // Auth succeeded but no trainee profile linked — sign out to avoid a half-logged-in state.
+    await supabase.auth.signOut();
+    return null;
+  }
+  if (t.status === "Exited") {
+    await supabase.auth.signOut();
+    return null;
+  }
+  await hydrateRoleFromSession();
+  return { id: t.id, name: t.name };
 }
 
 export async function logout(): Promise<void> {
