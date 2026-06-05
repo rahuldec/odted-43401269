@@ -28,7 +28,7 @@ export const Route = createFileRoute("/login")({
       await supabase.auth.signOut();
       localStorage.removeItem("odk-auth-role");
       localStorage.removeItem("odk-auth-trainee-id");
-      return;
+      throw redirect({ to: "/login", search: {}, replace: true });
     }
     const { data } = await supabase.auth.getSession();
     if (!data.session) {

@@ -43,6 +43,10 @@ export function EditTraineeDialog({
 
   function submit() {
     if (!form) return;
+    if (form.password && form.password.length > 0 && form.password.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
     onSave(form.id, form);
     toast.success("Trainee updated");
     onOpenChange(false);
