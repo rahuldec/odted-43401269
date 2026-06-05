@@ -38,7 +38,7 @@ function usernameToEmail(username: string) {
  */
 export const ensureAdminUserExists = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
-    z.object({ password: z.string().min(4).max(200) }).parse(input),
+    z.object({ password: z.string().min(6).max(200) }).parse(input),
   )
   .handler(async ({ data }) => {
     const expected = process.env.ODK_ADMIN_PASSWORD || "rahul-ranger";
@@ -89,7 +89,7 @@ export const createTraineeFn = createServerFn({ method: "POST" })
         manager: z.string().max(120).optional().default(""),
         notes: z.string().max(2000).optional().default(""),
         username: z.string().max(80).optional(),
-        password: z.string().min(4).max(200).optional(),
+        password: z.string().min(6).max(200).optional(),
       })
       .parse(input),
   )
@@ -167,7 +167,7 @@ export const updateTraineeFn = createServerFn({ method: "POST" })
           status: z.enum(["Active", "On Hold", "Exited"]).optional(),
           notes: z.string().max(2000).optional(),
           username: z.string().max(80).optional(),
-          password: z.string().min(4).max(200).optional(),
+          password: z.string().min(6).max(200).optional(),
         }),
       })
       .parse(input),

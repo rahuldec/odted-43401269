@@ -52,8 +52,8 @@ export function AddTraineeDialog({
       toast.error("Name is required");
       return;
     }
-    if (username.trim() && password.length < 4) {
-      toast.error("Password must be at least 4 characters");
+    if (username.trim() && password.length < 6) {
+      toast.error("Password must be at least 6 characters");
       return;
     }
     onAdd({ name, phone, joinDate, manager, notes, username, password });
@@ -115,7 +115,7 @@ export function AddTraineeDialog({
               <Input
                 id="password"
                 type="text"
-                placeholder="At least 4 characters"
+                placeholder="At least 6 characters"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="new-password"
